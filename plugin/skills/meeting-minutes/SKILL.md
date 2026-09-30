@@ -153,7 +153,8 @@ narration and anything a table already shows; keep decision rationale.
 
 ## Updating this skill
 
-Claude Code plugin route: `/plugin marketplace update meeting-minutes-kit`, then update the plugin from `/plugin`.
+Claude Code plugin route: `claude plugin marketplace update meeting-minutes-kit`, then `claude plugin update meeting-minutes@meeting-minutes-kit`, then restart
+(or use the `/plugin` menu).
 Skills route: re-run the install line from the README (the PowerShell one-liner, or `pnpm --config.dlx-cache-max-age=0 dlx github:Jem-Jem-Jem/meeting-minutes-kit install`,
 with the same `-Agents` / `-Dir` option if the skills were installed somewhere other than `~/.claude/skills`). Neither touches
 `%USERPROFILE%\.claude\meeting-minutes`.

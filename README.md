@@ -136,7 +136,8 @@ The document layout is fixed (`build_minutes.py`); changing the look means editi
 
 ## Update
 
-Re-run the same install line you used. Claude Code plugin: `/plugin marketplace update meeting-minutes-kit`.
+Re-run the same install line you used. Claude Code plugin: `claude plugin marketplace update meeting-minutes-kit`, then `claude plugin update meeting-minutes@meeting-minutes-kit`,
+then restart (the first only refreshes the listing; the second updates the plugin).
 If the version changed, the next job asks you to re-run the wizard once.
 
 ## If something goes wrong
