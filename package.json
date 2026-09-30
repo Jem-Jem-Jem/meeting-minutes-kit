@@ -8,6 +8,8 @@
   "files": [
     "bin/",
     "plugin/",
+    "examples/",
+    "tools/",
     "README.md",
     "LICENSE"
   ],
