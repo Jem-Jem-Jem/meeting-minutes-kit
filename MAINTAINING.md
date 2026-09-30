@@ -40,7 +40,8 @@ folder that ever held real data.
 3. Commit, push. Plugin users update with `/plugin marketplace update meeting-minutes-kit`. Claude Code only re-fetches a
    plugin when its `version` changes, so bump `plugin/.claude-plugin/plugin.json` (and `package.json`) for ANY content
    change; `kitVersion` in `kit.json` changes only when the wizard or the pins change (it forces a wizard re-run).
-4. npm route (the any-agent install, so effectively required): `npm login` (once), then
+4. npm route (the any-agent install; `pnpm dlx github:Jem-Jem-Jem/meeting-minutes-kit install` already works from the
+   repo without it, verified 2026-09-30, but a registry release is cleaner for non-git machines): `npm login` (once), then
    `pnpm publish --access public --no-git-checks`. Users update with `pnpm dlx meeting-minutes-kit@latest update`.
 
 ## Testing

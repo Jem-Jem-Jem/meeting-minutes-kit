@@ -44,6 +44,8 @@ winget is unavailable).
 ```
 pnpm dlx meeting-minutes-kit@latest install
 ```
+- Straight from GitHub, no npm release needed (needs git): `pnpm dlx github:Jem-Jem-Jem/meeting-minutes-kit install`
+  (`npx github:Jem-Jem-Jem/meeting-minutes-kit install` works the same). This always installs the latest `main`.
 - Default target is `~/.claude/skills`, which Claude Code reads. Freebuff scans it too when home skills are enabled; if
   your agent does not see the skills, use `--agents`, or `--dir` with a project's `.agents/skills`.
 - `--agents` installs to `~/.agents/skills` instead; `--dir <path>` to any folder (for example a project's
