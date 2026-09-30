@@ -1,0 +1,10 @@
+node_modules/
+__pycache__/
+*.pyc
+private/
+*.local.md
+*.local.json
+speaker_profiles.json
+*.wav
+*.mp3
+*.whisper*.txt

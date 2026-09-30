@@ -1,0 +1,28 @@
+{
+  "name": "meeting-minutes-kit",
+  "version": "0.2.0",
+  "description": "Installer for the meeting-minutes Claude Code skills (transcribe, reconcile, build docx).",
+  "bin": {
+    "meeting-minutes-kit": "bin/cli.js"
+  },
+  "files": [
+    "bin/",
+    "plugin/",
+    "README.md",
+    "LICENSE"
+  ],
+  "engines": {
+    "node": ">=16.7"
+  },
+  "license": "MIT",
+  "keywords": [
+    "claude-code",
+    "skills",
+    "meeting-minutes"
+  ],
+  "author": "Jem-Jem-Jem",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Jem-Jem-Jem/meeting-minutes-kit.git"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "kitVersion": "0.2.0",
+  "pins": {
+    "python-docx": "1.2.0",
+    "openpyxl": "3.1.5",
+    "faster-whisper": "1.2.1",
+    "whisperx": "3.8.6",
+    "pyannote-audio": "4.0.7",
+    "torch": "2.8.0",
+    "torchaudio": "2.8.0"
+  },
+  "unpinned": ["markitdown"],
+  "python": { "minMinor": 10, "maxMinor": 13, "installVersion": "3.12.10" }
+}

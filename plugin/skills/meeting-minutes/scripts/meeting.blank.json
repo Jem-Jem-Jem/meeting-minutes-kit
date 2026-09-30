@@ -1,0 +1,18 @@
+{
+  "date": "[Date]",
+  "time": "[Start time] to [End time]",
+  "venue": "[Venue]",
+  "attendance": ["[Name, Job title]"],
+  "not_present": ["[Name, Job title. Reason as stated in the meeting]"],
+  "items": [
+    { "section": "[Section band]" },
+    { "title": "[Item title (owner)]", "discussion": ["[Discussion point]"], "actions": ["[Owner: action]"] },
+    { "title": "[Item title (owner)]", "discussion": ["[Discussion point]"], "actions": [] }
+  ],
+  "closing": "There being no further business, the meeting concluded at [time].",
+  "schedules": [
+    { "title": "Schedule 1: [Title]", "columns": ["Category", "Count"], "rows": [["[Category]", "[n]"]] },
+    { "title": "Schedule 2: [Title]", "columns": ["Category", "Count"], "rows": [["[Category]", "[n]"]] },
+    { "title": "Schedule 3: [Title]", "columns": ["Date / Timeline", "Initiative", "Remark"], "rows": [["[Date]", "[Initiative]", "[Remark]"]] }
+  ]
+}

@@ -1,0 +1,68 @@
+{
+  "date": "1 January 2030",
+  "time": "10:00 AM to 10:45 AM",
+  "venue": "Example Meeting Room and Microsoft Teams",
+  "attendance": [
+    "Alex Example, Team Lead",
+    "Sam Sample, Marketing Manager",
+    "Riley Placeholder, Business Development Executive (via Teams)"
+  ],
+  "not_present": [
+    "Jordan Demo, Operations Manager. On leave."
+  ],
+  "notes": [],
+  "items": [
+    { "section": "Pipeline" },
+    {
+      "title": "Regional Partner Engagement (Sam)",
+      "discussion": [
+        "Introductory call with Partner A held on 28 Dec. Partner A asked for the programme fact sheet.",
+        "Partner B has not replied to two emails. Follow-up by phone planned.",
+        "Two enquiries received this week for the 1 March intake."
+      ],
+      "actions": [
+        "Sam: Send the programme fact sheet to Partner A.",
+        "Riley: Phone Partner B."
+      ]
+    },
+    {
+      "title": "Intake Numbers (Riley)",
+      "discussion": [
+        "12 applications submitted, 9 approved, 3 pending documents.",
+        "Refer to Appendix, Schedule 1."
+      ],
+      "actions": []
+    },
+    { "section": "Marketing" },
+    {
+      "title": "Campaign Timing (Alex)",
+      "discussion": [
+        "Spring campaign to start on 15 Feb. Creative review due 5 Feb.",
+        "Budget of S$2,000 confirmed."
+      ],
+      "actions": [
+        "Alex: Approve the creative by 5 Feb."
+      ]
+    }
+  ],
+  "closing": "There being no further business, the meeting concluded at 10:45 AM.",
+  "schedules": [
+    {
+      "title": "Schedule 1: Intake Pipeline",
+      "columns": ["Category", "Count"],
+      "rows": [
+        ["Approved", "9"],
+        ["Pending documents", "3"]
+      ],
+      "note": "Note: example data only."
+    },
+    {
+      "title": "Schedule 2: Ongoing Initiatives",
+      "columns": ["Date / Timeline", "Initiative", "Remark"],
+      "rows": [
+        ["15 Feb 2030", "Spring campaign", "Creative under review."],
+        ["Ongoing", "Partner outreach", "Two partners in progress."]
+      ]
+    }
+  ]
+}

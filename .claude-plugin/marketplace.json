@@ -1,0 +1,14 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "meeting-minutes-kit",
+  "description": "Weekly meeting-minutes workflow for Claude Code: transcribe, reconcile against a tracker, build a formatted docx.",
+  "owner": { "name": "Jem-Jem-Jem" },
+  "plugins": [
+    {
+      "name": "meeting-minutes",
+      "description": "Meeting-minutes workflow: machine setup wizard, whisperx transcription, tracker reconcile rules, docx builder.",
+      "source": "./plugin",
+      "category": "productivity"
+    }
+  ]
+}
