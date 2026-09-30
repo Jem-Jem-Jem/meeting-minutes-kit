@@ -9,27 +9,27 @@ You need a **transcript of the meeting**. Free chatbots cannot transcribe audio.
 - the `*.whisper.txt` from someone with the full tool installed (most accurate), or
 - Microsoft Teams' own meeting transcript (Recap, Transcript, download).
 
-You also need the **weekly tracker** (.xlsx): export the relevant tabs to text/CSV, or paste the relevant cells.
+Optionally add **context** that could be relevant: a tracker (export the relevant tabs to text/CSV, or paste the relevant cells), an agenda, earlier minutes, notes.
 
-**Data sensitivity:** transcripts and trackers contain student names, application numbers and commercial
+**Data sensitivity:** transcripts and context files contain student names, application numbers and commercial
 terms. A free consumer chatbot sends that data outside your organisation. Prefer an in-tenant assistant
 (for example Microsoft Copilot) where you can.
 
 ## HOW TO USE
 
 1. Copy everything inside the dashed block below and fill the two `[PASTE ...]` lines from the maintainer's `roster.local.md`.
-2. Paste it at the start of a new chat, then the transcript, then the tracker data, then say "produce the minutes".
+2. Paste it at the start of a new chat, then the transcript, then the context, then say "produce the minutes".
 
 ## THE PASS
 
 ```
 You are producing the weekly team meeting minutes for our organisation. These minutes are a COMPLIANCE RECORD reviewed in audit. Two things matter most: ACCURACY (an honest gap beats a confident wrong figure) and CONSISTENCY (same structure every week). Completeness is third.
 
-I will paste: (1) a meeting transcript, (2) weekly-tracker data. Produce the minutes as a Markdown table I can paste into the Word template.
+I will paste: (1) a meeting transcript, (2) any context files (a tracker, agenda, earlier minutes, notes). Produce the minutes as a Markdown table I can paste into the Word template.
 
 === SOURCES ===
 - Transcript = what was said. Primary source for names and terms.
-- Weekly tracker = authoritative for spellings, numbers, identities. Use the column for the week BEFORE the meeting (the meeting reports on the prior week; the meeting-week column is planned items, not a record).
+- Context files = authoritative for spellings, numbers and identities where they have them. If a context file is a weekly tracker, use the column for the week BEFORE the meeting (the meeting reports on the prior week; the meeting-week column is planned items, not a record).
 
 === NAMES, ROSTER, ITEM AREAS, SECTION HEADINGS ===
 [PASTE the roster, name-garble table, recurring item areas and section headings from roster.local.md]
@@ -52,7 +52,7 @@ An action bullet is: "[the person the discussion says will do it]: [what they we
 Do not add linking sentences, rationales, footnotes or explanations that the transcript or tracker does not explicitly support.
 
 === CONTESTED VALUES ===
-- Meeting value contradicts the tracker -> use the meeting's value, append "(differs from tracker)".
+- Meeting value contradicts a context file -> use the meeting's value, append "(differs from tracker)" (or that source's name).
 - Meeting itself unclear (people disagree, arithmetic muddled) -> write the range or "[to confirm]". Never pick one silently.
 
 === WRITING ===
@@ -94,5 +94,5 @@ run `sign_minutes.py` when the content is final.
 3. For each item: copy a blank item row, fill the S/N, Discussion and Action cells from the chatbot output. Bold the title line and any dates/money.
 4. Fill the appendix schedules.
 5. Closing line, then the sign-off block: the preparer signs and dates; the approver's side is left blank.
-6. Save as `DD-MM-YYYY meeting minutes.docx`. Keep the transcript and the tracker export in the same folder: that is the audit evidence trail.
+6. Save as `DD-MM-YYYY meeting minutes.docx`. Keep the transcript and the context files in the same folder: that is the audit evidence trail.
 7. Open in Word and check pagination: no bullet broken across a page; sign-off block whole.

@@ -1,7 +1,8 @@
 # meeting-minutes-kit
 
-Turn a meeting recording and a weekly tracker into a signed, consistently formatted minutes document. An AI
-coding agent does the reading and writing, and your own PC does the transcription.
+Turn a meeting recording, plus any context that could help, into a signed, consistently formatted minutes document.
+The audio is what the minutes are built from. An AI coding agent does the reading and writing, and your own PC does
+the transcription.
 
 **This tool needs a capable coding agent**: one that can run shell commands, read and write files, and follow long
 written instructions reliably. It has many steps and a compliance-grade output, so a weak agent will do it badly.
@@ -15,7 +16,8 @@ skill folders and can run shell commands. Freebuff reads them natively and shoul
 
 1. **Merges two table microphones** into one recording (optional; measured alignment, not file timecodes).
 2. **Transcribes** the audio locally with WhisperX, labelled by speaker, on an NVIDIA GPU or just the CPU.
-3. **Reconciles** the transcript against your weekly tracker (the agent, following written rules: bare facts only,
+3. **Reconciles** the transcript against whatever context you give it: a tracker, an agenda, earlier minutes, notes, an
+   attendee list, any file that could be relevant (the agent, following written rules: bare facts only,
    explicit action owners, honest gaps instead of guesses).
 4. **Builds** a formatted `.docx` (Word), which you review and edit by hand.
 5. **Signs** it with your signature image once you say the content is final.
@@ -24,7 +26,7 @@ Two agent skills make this up:
 - `minutes-setup` checks your computer, installs what is missing and walks you through the human-only steps.
 - `meeting-minutes` is the weekly workflow.
 
-Audio is transcribed on your PC. The agent reads the transcript and the tracker to write the minutes, as in any
+Audio is transcribed on your PC. The agent reads the transcript and your context files to write the minutes, as in any
 agent session.
 
 ## Requirements
@@ -96,7 +98,7 @@ can run them yourself and use any chatbot only for the reading and writing step:
 2. Merge mics and transcribe with the kit's Python (`%USERPROFILE%\.claude\meeting-minutes\venv\Scripts\python.exe`):
    `merge_mics.py`, then `transcribe.py`. Both print usage with `--help`.
 3. Paste the "Team Pass" prompt (`plugin/skills/meeting-minutes/references/team-pass-template.md`), the transcript and the
-   tracker into a chatbot. It answers with a `meeting.json`.
+   context into a chatbot. It answers with a `meeting.json`.
 4. Save that as `meeting.json` and run `build_minutes.py meeting.json "DD-MM-YYYY meeting minutes.docx"`, review in Word,
    then `sign_minutes.py`.
 
@@ -116,7 +118,13 @@ They are copied to `%USERPROFILE%\.claude\meeting-minutes`, and updates never to
 
 ## Each week
 
-Put the audio and the tracker in a folder and tell your agent: `write the meeting minutes`.
+Put the recording in a folder together with any context that could be relevant (a tracker, an agenda, the last minutes,
+notes) and tell your agent: `write the meeting minutes`.
+
+- **The audio decides what was said.** Context only helps the agent get names, spellings and numbers right. It is
+  optional: with none, the agent works from the audio alone and lists what it could not verify.
+- **Trackers** laid out one week per row or column (sheet per person is fine) are cut down to the one week the meeting
+  reports on automatically.
 
 - **Two mics?** Put each mic's files in its own folder. The agent merges them, then asks you to listen to three
   short samples before it continues. (Developed with DJI Mic 3 files saved in 30-minute chunks.)

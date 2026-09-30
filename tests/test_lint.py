@@ -28,7 +28,7 @@ bad["items"][1]["actions"] += ["Zed: Phone Partner B.", "[Action placeholder]"]
 
 def run(cfg, extra=()):
     p = w("m.json", json.dumps(cfg))
-    return subprocess.run([sys.executable, os.path.join(S, "lint_minutes.py"), p, "--transcript", transcript, "--tracker", tracker, "--roster", roster, *extra],
+    return subprocess.run([sys.executable, os.path.join(S, "lint_minutes.py"), p, "--transcript", transcript, "--context", tracker, "--roster", roster, *extra],
                           capture_output=True, text=True, env=env)
 
 r = run(good); assert r.returncode == 0 and "0 error" in r.stdout, r.stdout + r.stderr

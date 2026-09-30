@@ -39,7 +39,7 @@ approver name. Row 3 `Date: ___/___/____   Signature: ___`. The preparer signs (
 `sign_minutes.py`; the approver's side stays blank. All rows `cantSplit`.
 
 **Appendix:** schedules defined in `meeting.json` (`schedules`). Navy headers, zebra rows,
-right-aligned count column in 2-column schedules. Numbers come from the weekly tracker.
+right-aligned count column in 2-column schedules. Numbers come from the context files (for example a weekly tracker).
 
 **Writing:** no em-dashes or en-dashes (ranges as "to"); short declarative sentences for facts;
 active voice.
@@ -48,7 +48,7 @@ active voice.
 
 - File: `DD-MM-YYYY meeting minutes.docx` (for example `07-09-2026 meeting minutes.docx`).
 - Keep in the same meeting folder: the source audio, the transcript (`*.whisper.txt`), and a snapshot
-  of the weekly tracker used. That set is the audit evidence trail: how the minute was derived.
+  of the context files used (for example the weekly tracker). That set is the audit evidence trail: how the minute was derived.
 - Amendments after sign-off: add a dated note of what changed. Never silently overwrite a signed minute.
 - Never create, move or edit anything in Teams, SharePoint or OneDrive on the user's behalf. The
   scribe files the finished minutes themselves.

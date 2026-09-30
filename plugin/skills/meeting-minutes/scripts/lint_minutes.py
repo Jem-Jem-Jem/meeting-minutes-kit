@@ -1,13 +1,13 @@
 # -*- coding: utf-8 -*-
 """Mechanical screen of a draft meeting.json against its sources. Works the same for any model or agent.
 
-    python lint_minutes.py meeting.json --transcript talk.whisper.txt --tracker slice.md [--roster roster.local.md]
+    python lint_minutes.py meeting.json --transcript talk.whisper.txt --context slice.md [more files] [--roster roster.local.md]
 
 It catches the classes of error that are cheap to detect and expensive to miss in a compliance record:
   ERROR  dash characters; template placeholders; SPEAKER_xx labels; a hedged time ("approximately"); an action
          owner who is not on the roster
-  WARN   a number in the minutes that appears in neither the transcript nor the tracker; a capitalised name that
-         appears in neither the roster, the transcript nor the tracker (misheard or invented); an attendee who is not on
+  WARN   a number in the minutes that appears in neither the transcript nor a context file; a capitalised name that
+         appears in neither the roster, the transcript nor a context file (misheard or invented); an attendee who is not on
          the roster; a sentence with a reason word ("because", "so that", "therefore", "due to" ...) that may be inferred context
   INFO   counts of [to confirm] markers
 A clean run does NOT mean the minutes are right. It means the cheap checks passed. Exit code 1 when there are errors.
@@ -121,14 +121,16 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("meeting_json")
     ap.add_argument("--transcript", help="the speaker-labelled transcript (.txt)")
-    ap.add_argument("--tracker", help="the tracker slice (.md) or the tracker (.xlsx)")
+    ap.add_argument("--context", nargs="*", default=[], help="context files: a tracker slice, agenda, earlier minutes, notes (.md/.txt/.xlsx)")
+    ap.add_argument("--tracker", nargs="*", default=[], help="alias of --context (kept for older instructions)")
     ap.add_argument("--roster", default=os.path.join(DATA_DIR, "roster.local.md"))
     ap.add_argument("--allow", default="", help="extra words to accept, comma-separated")
     a = ap.parse_args()
 
     with open(a.meeting_json, encoding="utf-8-sig") as f:
         m = json.load(f)
-    transcript, tracker = load_text(a.transcript), load_text(a.tracker)
+    transcript = load_text(a.transcript)
+    tracker = chr(10).join(load_text(p) for p in list(a.context) + list(a.tracker))   # all context files, as one text
     roster = load_text(a.roster) if a.roster and os.path.exists(a.roster) else ""
     cfg = {}
     cp = os.path.join(DATA_DIR, "config.json")
@@ -136,7 +138,7 @@ def main():
         with open(cp, encoding="utf-8-sig") as f:
             cfg = json.load(f)
     if not transcript and not tracker:
-        sys.exit("give at least one of --transcript / --tracker")
+        sys.exit("give at least one of --transcript / --context")
 
     src_nums = set()
     for t in (transcript, tracker):
@@ -187,7 +189,7 @@ def main():
         for n in digit_numbers(scan):
             if n not in src_nums and (where, n) not in seen_nums:
                 seen_nums.add((where, n))
-                warns.append(f"number {n} not found in the transcript or tracker ({where}); fine only if you computed it (e.g. a date from a weekday): {text[:80]!r}")
+                warns.append(f"number {n} not found in the transcript or context ({where}); fine only if you computed it (e.g. a date from a weekday): {text[:80]!r}")
         for sent in re.split(r"(?<=[.!?])\s+|\s+-\s+|:\s+", text):
             words = sent.split()
             for w in CAP_RE.findall(" ".join(words[1:])):   # the first word of a sentence is capitalised anyway
@@ -195,7 +197,7 @@ def main():
                 parts = [p for p in lw.split("-") if p]             # "China-specific" is fine if every part is known
                 if not all(p in known for p in parts) and lw not in known and lw not in seen_names:
                     seen_names.add(lw)
-                    warns.append(f"name/term {w!r} not found in the roster, transcript or tracker ({where}): check the spelling")
+                    warns.append(f"name/term {w!r} not found in the roster, transcript or context ({where}): check the spelling")
         for r in REASON_RE.finditer(text):
             warns.append(f"reason word {r.group(0)!r}: is this stated in the source, or inferred? ({where}): {text[:90]!r}")
 

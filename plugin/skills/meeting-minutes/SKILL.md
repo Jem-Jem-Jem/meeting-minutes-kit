@@ -1,6 +1,6 @@
 ---
 name: meeting-minutes
-description: "Use when producing or revising the weekly team meeting minutes docx: transcribing the meeting audio, reconciling it against the weekly tracker, and building the signed minutes. Triggers: 'meeting minutes for [date]', 'write the minutes', a meeting audio file plus the weekly tracker, 'reconcile the minutes', 'write up the meeting'."
+description: "Use when producing or revising the weekly team meeting minutes docx: transcribing the meeting audio, reconciling it with any context files (tracker, agenda, earlier minutes, notes), and building the signed minutes. Triggers: 'meeting minutes for [date]', 'write the minutes', a meeting audio file with or without context files, 'reconcile the minutes', 'write up the meeting'."
 ---
 
 # Weekly meeting minutes
@@ -57,8 +57,13 @@ skill's `scripts` folder. Always call `PY`, never a bare `python`.
      `PY S\speaker_profiles.py enroll-cluster "<audio>" "<transcript>.segments.json" SPEAKER_01 "Full Name"`
      Use the exact name spelling the roster uses. If the user is unsure who a voice is, leave it as
      `SPEAKER_XX` and work it out from the content and the roster, and say so in the review list.
-2. **Weekly tracker (.xlsx).** Authoritative for names, numbers and agent identities. **Read the column for
-   the week the meeting reports on, which is the week BEFORE the meeting.** The meeting-week column and
+2. **Context files (optional, any kind).** The user may hand you anything that could be relevant: a tracker, an agenda,
+   earlier minutes, a slide deck, notes, an attendee list. The audio is the base and decides what was said; context only
+   helps you get names, spellings, numbers and identities right, and where it has them it is authoritative for those.
+   Convert documents with `markitdown` first (in the kit's `venv\Scripts`). If nothing was supplied, ask once whether
+   there is anything relevant; if not, carry on from the audio alone and list what you could not verify.
+   **A weekly tracker workbook (.xlsx):** read the column for
+   the week the meeting reports on, which is the week BEFORE the meeting. The meeting-week column and
    later hold planned items, not a record. Cut it down to that one week first (a full tracker can be 250 KB; the slice
    is a few KB and cannot leak the planned column):
    `PY S\tracker_slice.py "<tracker.xlsx>" --meeting-date YYYY-MM-DD -o "<folder>\tracker-slice.md"`, then read the `.md`.
@@ -71,10 +76,10 @@ skill's `scripts` folder. Always call `PY`, never a bare `python`.
 ## Flow
 
 1. **Transcribe** the audio (above).
-2. **Reconcile** the transcript against the tracker into a list of items, each with discussion bullets and
+2. **Reconcile** the transcript against the context files into a list of items, each with discussion bullets and
    action bullets (rules below). Write it as `meeting.json`: copy `S\meeting.example.json` and replace the content.
 3. **Lint** the draft before building anything:
-   `PY S\lint_minutes.py meeting.json --transcript "<transcript>" --tracker "<tracker-slice.md>"`
+   `PY S\lint_minutes.py meeting.json --transcript "<transcript>" --context "<context file or tracker-slice.md>" [more context files]`
    Fix every ERROR (dashes, placeholders, owners not on the roster, hedged time). Go through every WARN against the sources:
    a number, name or reason word it flags is either wrong or needs to be true from the source. Whatever you keep goes on the
    review list for the user. A clean lint is not proof the minutes are right.
@@ -82,10 +87,10 @@ skill's `scripts` folder. Always call `PY`, never a bare `python`.
 5. **Verify**: `powershell -ExecutionPolicy Bypass -File S\render_pdf.ps1 "<docx>"`, then read the PDF/PNG pages:
    pagination, no bullet broken mid-page, sign-off block whole. This is a rough check only (see references/format.md).
 6. **Human review gate.** Before anything is signed, give the user the list of points you were unsure about
-   (`[to confirm]` items, unresolved speakers, values that differ from the tracker). The user checks the docx
+   (`[to confirm]` items, unresolved speakers, values that differ from the context). The user checks the docx
    in Word against the recording where needed. Do not sign until they say the content is frozen.
 7. **Sign**: `PY S\sign_minutes.py "<docx>" --date D/M/YYYY`. File as `DD-MM-YYYY meeting minutes.docx` with the
-   audio, transcript and a snapshot of the tracker beside it.
+   audio, transcript and copies of the context files used beside it.
 
 After the first build, **edit the .docx directly** (small python-docx patch scripts or Word COM). Do not re-run
 `build_minutes.py`: once it is hand-edited, the docx is the source of truth.
@@ -121,12 +126,12 @@ this team are in `roster.local.md`. Use only the bands that have content.
 
 **State bare facts only.** Every added sentence is a claim, and an inferred one can be wrong. Do not add
 linking sentences, rationales, footnotes, or explanations of who joined how or why unless the transcript or
-tracker explicitly supports them. If two facts might be connected, write them as separate bullets. Cross-check
-every proper noun against the tracker's own spelling and `roster.local.md` before trusting the transcript.
+a context file explicitly supports them. If two facts might be connected, write them as separate bullets. Cross-check
+every proper noun against the context files' own spelling and `roster.local.md` before trusting the transcript.
 
 **Contested values.**
-- Meeting value contradicts the tracker: use the meeting's value for that meeting's decisions and append
-  `(differs from tracker)`.
+- Meeting value contradicts a context file: use the meeting's value for that meeting's decisions and append
+  `(differs from tracker)` (or the name of that context source).
 - The meeting itself is unclear (people disagree, arithmetic muddled): write the range or `[to confirm]`.
   Never pick one silently.
 
@@ -135,7 +140,7 @@ narration and anything a table already shows; keep decision rationale.
 
 ## Common mistakes
 
-- Reading the meeting-week tracker column (planned items) instead of the prior week.
+- With a weekly tracker: reading the meeting-week column (planned items) instead of the prior week.
 - Attributing an action to the item's owner instead of the person who said they would do it.
 - Turning a scheduled meeting or a status report into an action bullet.
 - Guessing the start time or weekday; leaving "(estimated)" in the header.
