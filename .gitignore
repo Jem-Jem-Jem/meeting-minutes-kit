@@ -8,3 +8,6 @@ speaker_profiles.json
 *.wav
 *.mp3
 *.whisper*.txt
+
+# fictional samples are meant to be public
+!examples/team/*
