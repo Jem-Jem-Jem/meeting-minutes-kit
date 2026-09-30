@@ -45,15 +45,15 @@ Install route 3 needs neither.
 
 ## Install (pick ONE route)
 
-**1. pnpm / npx (any agent; needs Node.js 16.7+):**
+**1. pnpm / npx (any agent; needs Node.js 16.7+, no git):**
 ```
-pnpm --config.dlx-cache-max-age=0 dlx github:Jem-Jem-Jem/meeting-minutes-kit install
+pnpm --config.dlx-cache-max-age=0 dlx meeting-minutes-kit@latest install
 ```
-(`--config.dlx-cache-max-age=0` matters: pnpm otherwise reuses a cached copy for a day and can install an old version.) Copies the two skills into `~/.claude/skills` (read by Claude Code). Options: `--agents` (installs to
-`~/.agents/skills`), `--dir <path>` (any folder, for example a project's `.agents/skills`), `uninstall`. The `github:`
-form also needs git (`npx github:...` works the same). Once released on npm it needs Node only:
-`pnpm dlx meeting-minutes-kit@latest install`. Freebuff scans `~/.claude/skills` when home skills are enabled; if your
-agent does not see the skills, use `--agents` or `--dir`.
+`--config.dlx-cache-max-age=0` matters: pnpm otherwise reuses a cached copy for a day and can install an old version.
+This copies the two skills into `~/.claude/skills` (read by Claude Code). Options: `--agents` (installs to
+`~/.agents/skills`), `--dir <path>` (any folder, for example a project's `.agents/skills`), `uninstall`. Freebuff scans
+`~/.claude/skills` when home skills are enabled; if your agent does not see the skills, use `--agents` or `--dir`.
+Straight from the repo instead of the registry (needs git as well): `pnpm --config.dlx-cache-max-age=0 dlx github:Jem-Jem-Jem/meeting-minutes-kit install`.
 
 **2. Claude Code plugin (needs git).** Use this *instead of* route 1, not as well:
 ```
