@@ -78,3 +78,24 @@ openpyxl 3.1.5. Bump them together, then rerun the end-to-end test.
   are not, so the first clean PC is their real test. Node.js (MSI) and Git for Windows still need admin once.
 - Two table mics never line up perfectly for every speaker (different distances), so always listen to the
   merge samples.
+
+## Rotation and the non-Claude scribe (Freebuff test checklist)
+
+Scribes rotate monthly. The first scribe runs Claude Code via the plugin route (installed and working as of
+2026-09-30). A scribe without a Claude plan would use Freebuff (or another `SKILL.md`-reading agent). Nothing about that
+has been run yet. On that day:
+
+1. Install with route 3 (PowerShell installer) or route 1, default target `~/.claude/skills`. Start Freebuff and ask what
+   skills it has. If it doesn't list `meeting-minutes` and `minutes-setup`, reinstall with `-Agents`, or with `-Dir` into
+   the project folder's `.agents/skills` and start Freebuff from that folder.
+2. The scribe runs the wizard themselves (it is interactive). Then `preflight.ps1 -Gate` must print READY.
+3. On a short recording, watch for: reads `roster.local.md`; calls the venv Python, not a bare `python`; backgrounds the
+   transcription or hands the command over; merges mics and stops for the listening check; asks who unnamed voices are
+   instead of guessing; writes `meeting.json`; builds and renders the docx; lists what it was unsure about; does NOT sign
+   before being told the content is final.
+4. Score it against ground truth: replay the 22 Sep 2026 audio and tracker and compare with the signed minutes (invented
+   sentences, wrong action owner, wrong tracker column, misspelled names, numbers not in the sources).
+5. If it is not good enough, fall back to the chat-only route in the README ("If your agent cannot run commands").
+
+New scribes' voices: each scribe's `speaker_profiles.json` grows locally as they name and enroll voices. Collect it if
+you want the improved prints in the next team bundle (rebuild with `tools/make-team-bundle.ps1 -IncludeVoices`).
