@@ -1,6 +1,6 @@
 {
   "name": "meeting-minutes-kit",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "Installer for the meeting-minutes Claude Code skills (transcribe, reconcile, build docx).",
   "bin": {
     "meeting-minutes-kit": "bin/cli.js"

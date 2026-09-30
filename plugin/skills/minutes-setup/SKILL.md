@@ -5,6 +5,9 @@ description: "Use when setting up or repairing the meeting-minutes tool on a com
 
 # Minutes tool setup
 
+These instructions are for any coding agent that can run shell commands and read files (Claude Code, Freebuff, and
+similar). "You" means the agent; "the user" is the person at the keyboard.
+
 The setup wizard installs what is missing, walks the user through the human-only steps (HuggingFace
 token, signature image, team files) and proves the whole chain works. **The wizard is interactive. You
 cannot run it: your shell has no keyboard input. The user runs it in their own PowerShell window.**
@@ -29,8 +32,8 @@ cannot run it: your shell has no keyboard input. The user runs it in their own P
    first, so if the maintainer's `minutes-team-files.zip` is already downloaded it offers that path), their name
    and job title, a signature image, and a free HuggingFace token. Tell them the first run downloads several GB and can take a while.
 3. **Wait.** When the user says it finished, run the preflight again and confirm: no blockers, nothing left to
-   install, and `%USERPROFILE%\.claude\meeting-minutes\setup-complete.json` exists. Tell them to restart Claude
-   Code once, then say "write the meeting minutes".
+   install, and `%USERPROFILE%\.claude\meeting-minutes\setup-complete.json` exists. Tell them to restart the agent
+   once (so it sees the new settings), then say "write the meeting minutes".
 
 ## Rules
 

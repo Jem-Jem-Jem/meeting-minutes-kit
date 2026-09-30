@@ -1,6 +1,6 @@
 # Team Pass (any chatbot, no install)
 
-For anyone producing the minutes **without** Claude Code. Two parts: reconcile (any chatbot) and
+For anyone producing the minutes **without** a coding agent. Two parts: reconcile (any chatbot) and
 assemble (Word, no code). The maintainer supplies the team-specific blocks marked `[PASTE ...]`.
 
 ## Before you start

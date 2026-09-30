@@ -5,6 +5,9 @@ description: "Use when producing or revising the weekly team meeting minutes doc
 
 # Weekly meeting minutes
 
+These instructions are for any coding agent that can run shell commands and read files (Claude Code, Freebuff,
+and similar). "You" means the agent; "the user" is the person at the keyboard.
+
 The minutes are a **compliance record** that is reviewed in audit. Two things matter above all:
 **accuracy** (an honest gap beats a confident wrong figure) and **consistency** (same structure and
 format every meeting). Completeness is third.
@@ -38,11 +41,12 @@ skill's `scripts` folder. Always call `PY`, never a bare `python`.
    `PY S\transcribe.py "<audio>" --attendees "Name1,Name2,..." --out "<folder>\<name>.whisper.txt"`
    - List the enrolled people who were actually present in `--attendees`; it pins the speaker count. Check
      the exact spellings with `PY S\speaker_profiles.py list`.
-   - **Run it in the background** (your shell tool stops foreground commands after 10 minutes) and send its
-     output to a log file. On a PC without an NVIDIA GPU it can take an hour or more; tell the user roughly
+   - **Run it in the background** if your shell tool allows it (many stop foreground commands after about
+     10 minutes), sending its output to a log file. If you cannot background it, give the user the exact
+     command to run in their own terminal and wait for them. On a PC without an NVIDIA GPU it can take an hour or more; tell the user roughly
      how long (the setup wizard measured it: `rtf` in `setup-complete.json`, seconds of work per second of
      audio). There is no transcript to reconcile until it finishes.
-   - It keeps the PC awake while running and checkpoints each stage. If the run is interrupted (Claude Code
+   - It keeps the PC awake while running and checkpoints each stage. If the run is interrupted (the agent
      closed, power cut), run the SAME command again: it resumes. `--fresh` throws the checkpoint away.
    - **Name the unknown speakers.** The end of the output lists "speakers found". Any marked `NOT NAMED` is a
      voice with no saved profile. Show the user the two sample lines and ask who it is. Never guess. Then:
@@ -133,5 +137,6 @@ narration and anything a table already shows; keep decision rationale.
 
 ## Updating this skill
 
-Plugin route: `/plugin marketplace update meeting-minutes-kit`, then update the plugin from `/plugin`.
-pnpm route: `pnpm dlx meeting-minutes-kit@latest update`. Neither touches `%USERPROFILE%\.claude\meeting-minutes`.
+Claude Code plugin route: `/plugin marketplace update meeting-minutes-kit`, then update the plugin from `/plugin`.
+Any-agent route: `pnpm dlx meeting-minutes-kit@latest update` (add `--agents` or `--dir <path>` if the skills were
+installed somewhere other than `~/.claude/skills`). Neither touches `%USERPROFILE%\.claude\meeting-minutes`.

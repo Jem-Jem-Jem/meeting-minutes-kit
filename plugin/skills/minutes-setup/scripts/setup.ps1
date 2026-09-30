@@ -1,6 +1,6 @@
 # Meeting-minutes setup wizard.
 # Run this in YOUR OWN PowerShell window (it asks you questions). It will not work
-# inside Claude's tool window.
+# inside an AI agent's tool window (that has no keyboard input).
 #
 #   powershell -ExecutionPolicy Bypass -File setup.ps1
 #
@@ -341,4 +341,4 @@ Write-Host 'Setup complete.' -ForegroundColor Green
 if (-not (Test-Path (Join-Path $Data 'speaker_profiles.json'))) {
   Say 'Note: no voice profiles yet. After your first meeting the tool will show you who each unknown speaker is and save their voices for next time.'
 }
-Say 'Go back to Claude Code (restart it once so it sees the new settings) and say:  write the meeting minutes'
+Say 'Go back to your AI agent (restart it once so it sees the new settings) and say:  write the meeting minutes'

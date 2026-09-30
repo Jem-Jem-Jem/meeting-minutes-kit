@@ -37,9 +37,11 @@ folder that ever held real data.
    Changing `kitVersion` makes every scribe's gate say "kit was updated, re-run the setup wizard", which is
    what you want when pins change. For a docs-only change you may leave `kitVersion` alone.
 2. `claude plugin validate .` and `claude plugin validate ./plugin` must both pass.
-3. Commit, push. Plugin users update with `/plugin marketplace update meeting-minutes-kit`.
-4. npm route: `npm login` (once), then `pnpm publish --access public --no-git-checks`. Users update with
-   `pnpm dlx meeting-minutes-kit@latest update`.
+3. Commit, push. Plugin users update with `/plugin marketplace update meeting-minutes-kit`. Claude Code only re-fetches a
+   plugin when its `version` changes, so bump `plugin/.claude-plugin/plugin.json` (and `package.json`) for ANY content
+   change; `kitVersion` in `kit.json` changes only when the wizard or the pins change (it forces a wizard re-run).
+4. npm route (the any-agent install, so effectively required): `npm login` (once), then
+   `pnpm publish --access public --no-git-checks`. Users update with `pnpm dlx meeting-minutes-kit@latest update`.
 
 ## Testing
 
