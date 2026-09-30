@@ -23,8 +23,16 @@ foreach ($f in $files) {
   if ((Get-Content $f -Raw) -match 'hf_[A-Za-z0-9]{20,}|sk-[A-Za-z0-9]{20,}|npm_[A-Za-z0-9]{20,}') { throw "$f contains something that looks like an access token. Remove it." }
 }
 
+# stamp: the setup wizard compares this with the installed copy and offers to update when a bundle is newer
+$stampDir = Join-Path $env:TEMP ('bundle-stamp-' + [guid]::NewGuid().ToString('N'))
+New-Item -ItemType Directory -Force -Path $stampDir | Out-Null
+$stamp = Join-Path $stampDir 'bundle.json'
+(@{ builtAt = (Get-Date).ToUniversalTime().ToString('s') + 'Z'; files = @($files | ForEach-Object { Split-Path $_ -Leaf }) } | ConvertTo-Json) | Set-Content -Path $stamp -Encoding ASCII
+$files += $stamp
+
 if (Test-Path $Out) { Remove-Item $Out -Force }
 Compress-Archive -Path $files -DestinationPath $Out
+Remove-Item $stampDir -Recurse -Force
 Write-Host "wrote $Out"
 Get-ChildItem $Out | Select-Object Name, Length | Format-Table -AutoSize
 Write-Host 'Contains:'; $files | ForEach-Object { Write-Host ('  ' + (Split-Path $_ -Leaf)) }

@@ -16,7 +16,9 @@ format every meeting). Completeness is third.
 
 1. Run the quick gate: `powershell -NoProfile -ExecutionPolicy Bypass -File "S\..\..\minutes-setup\scripts\preflight.ps1" -Gate`
    It prints `READY` or `NOT READY: <reason>` (setup never finished, the kit was updated and needs the wizard
-   again, a package is missing, and so on). If it is not READY, STOP and use the `minutes-setup` skill. Do not
+   again, a package is missing, and so on). READY may be followed by a `NOTE:` that a newer team-files bundle has been
+   downloaded: tell the user, and offer to run the setup wizard again to update the roster before you start. If it is
+   not READY, STOP and use the `minutes-setup` skill. Do not
    try to install or repair things yourself.
 2. Read `%USERPROFILE%\.claude\meeting-minutes\roster.local.md` in full. It holds the team's roster, name
    spellings, item areas, section bands, approver and any team-specific rules. Everything below assumes
@@ -57,8 +59,12 @@ skill's `scripts` folder. Always call `PY`, never a bare `python`.
      `SPEAKER_XX` and work it out from the content and the roster, and say so in the review list.
 2. **Weekly tracker (.xlsx).** Authoritative for names, numbers and agent identities. **Read the column for
    the week the meeting reports on, which is the week BEFORE the meeting.** The meeting-week column and
-   later hold planned items, not a record. Convert first:
-   `%USERPROFILE%\.claude\meeting-minutes\venv\Scripts\markitdown.exe "<tracker.xlsx>" -o "<tracker>.md"`, then read the `.md`.
+   later hold planned items, not a record. Cut it down to that one week first (a full tracker can be 250 KB; the slice
+   is a few KB and cannot leak the planned column):
+   `PY S\tracker_slice.py "<tracker.xlsx>" --meeting-date YYYY-MM-DD -o "<folder>\tracker-slice.md"`, then read the `.md`.
+   Read its "Skipped" list: a sheet with no matching week may need a look by hand. If the slice is empty or the layout is
+   unusual, fall back to `markitdown.exe "<tracker.xlsx>" -o "<tracker>.md"` (in the kit's `venv\Scripts`) and pick the
+   column yourself.
 3. Manual notes, if any: a bonus spine for structure and ownership. Not required.
 4. A Teams or Fireflies transcript, if present: a quick cross-check only. Auto-summaries garble names.
 
@@ -67,13 +73,18 @@ skill's `scripts` folder. Always call `PY`, never a bare `python`.
 1. **Transcribe** the audio (above).
 2. **Reconcile** the transcript against the tracker into a list of items, each with discussion bullets and
    action bullets (rules below). Write it as `meeting.json`: copy `S\meeting.example.json` and replace the content.
-3. **Build** the docx once: `PY S\build_minutes.py meeting.json "DD-MM-YYYY meeting minutes.docx"`.
-4. **Verify**: `powershell -ExecutionPolicy Bypass -File S\render_pdf.ps1 "<docx>"`, then read the PDF/PNG pages:
+3. **Lint** the draft before building anything:
+   `PY S\lint_minutes.py meeting.json --transcript "<transcript>" --tracker "<tracker-slice.md>"`
+   Fix every ERROR (dashes, placeholders, owners not on the roster, hedged time). Go through every WARN against the sources:
+   a number, name or reason word it flags is either wrong or needs to be true from the source. Whatever you keep goes on the
+   review list for the user. A clean lint is not proof the minutes are right.
+4. **Build** the docx once: `PY S\build_minutes.py meeting.json "DD-MM-YYYY meeting minutes.docx"`.
+5. **Verify**: `powershell -ExecutionPolicy Bypass -File S\render_pdf.ps1 "<docx>"`, then read the PDF/PNG pages:
    pagination, no bullet broken mid-page, sign-off block whole. This is a rough check only (see references/format.md).
-5. **Human review gate.** Before anything is signed, give the user the list of points you were unsure about
+6. **Human review gate.** Before anything is signed, give the user the list of points you were unsure about
    (`[to confirm]` items, unresolved speakers, values that differ from the tracker). The user checks the docx
    in Word against the recording where needed. Do not sign until they say the content is frozen.
-6. **Sign**: `PY S\sign_minutes.py "<docx>" --date D/M/YYYY`. File as `DD-MM-YYYY meeting minutes.docx` with the
+7. **Sign**: `PY S\sign_minutes.py "<docx>" --date D/M/YYYY`. File as `DD-MM-YYYY meeting minutes.docx` with the
    audio, transcript and a snapshot of the tracker beside it.
 
 After the first build, **edit the .docx directly** (small python-docx patch scripts or Word COM). Do not re-run

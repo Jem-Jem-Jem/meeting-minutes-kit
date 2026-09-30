@@ -11,6 +11,8 @@ CLI (run with the kit's venv python):
     python speaker_profiles.py enroll-cluster audio.wav transcript.txt.segments.json SPEAKER_01 "Name"
         the easy route: after a transcription, enroll an unnamed speaker from their longest
         clean turns (no timestamps to hunt for)
+    python speaker_profiles.py merge other_profiles.json
+        add people from another profiles file (a newer team bundle); people already on file are kept as they are
     python speaker_profiles.py relabel transcript.txt SPEAKER_01=Name [SPEAKER_02=Name2 ...]
         rename speakers in a finished transcript (and its .segments.json) without re-running it
 """
@@ -202,6 +204,18 @@ def enroll_cluster(audio_path, segments_json, cluster, name, device="cpu", max_c
     enroll(name, audio_path, [(s["start"], s["end"]) for s in good], device=device)
 
 
+def merge_profiles(other_path):
+    with open(other_path, encoding="utf-8-sig") as f:
+        other = json.load(f)
+    other = {k: (v if isinstance(v[0], list) else [v]) for k, v in other.items()}
+    raw = _load_raw()
+    added = [k for k in other if k not in raw]
+    for k in added:
+        raw[k] = other[k]
+    _save_raw(raw)
+    print(f"merged voice profiles: {len(added)} added ({', '.join(added) or 'none'}), {len(other) - len(added)} already on file kept as is")
+
+
 def relabel(transcript_path, mapping):
     import re
     line_re = re.compile(r"^(\[[0-9.]+-[0-9.]+\] )(.+?)(: .*)$")
@@ -232,6 +246,8 @@ if __name__ == "__main__":
         ensure_hf_token()
         enroll_cluster(sys.argv[2], sys.argv[3], sys.argv[4], sys.argv[5],
                        device="cuda" if torch.cuda.is_available() else "cpu")
+    elif len(sys.argv) >= 3 and sys.argv[1] == "merge":
+        merge_profiles(sys.argv[2])
     elif len(sys.argv) >= 4 and sys.argv[1] == "relabel":
         relabel(sys.argv[2], dict(a.split("=", 1) for a in sys.argv[3:]))
     elif len(sys.argv) >= 2 and sys.argv[1] == "list":

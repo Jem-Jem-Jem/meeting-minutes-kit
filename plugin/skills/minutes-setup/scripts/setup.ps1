@@ -108,7 +108,8 @@ function Pip($pipArgs) {
   & $VenvPy -m pip @pipArgs
   if ($LASTEXITCODE -ne 0) { Bad ('pip failed: ' + ($pipArgs -join ' ')); exit 1 }
 }
-function Import-TeamFiles($src) {
+function Expand-TeamSource($src) {
+  # returns the folder that holds roster.local.md (unpacks a zip to a temp folder first)
   $folder = $src
   if ($src -like '*.zip') {
     $folder = Join-Path $env:TEMP 'minutes-team-files'
@@ -117,16 +118,31 @@ function Import-TeamFiles($src) {
     $r = Get-ChildItem $folder -Recurse -File -Filter 'roster.local.md' | Select-Object -First 1
     if ($r) { $folder = $r.DirectoryName }
   }
+  return $folder
+}
+function Get-BundleStamp($folder) {
+  $p = Join-Path $folder 'bundle.json'
+  if (Test-Path $p) { try { return [string](Get-Content $p -Raw | ConvertFrom-Json).builtAt } catch { } }
+  return $null
+}
+function Import-TeamFiles($folder) {
   foreach ($f in 'roster.local.md', 'team.local.json') {
     $p = Join-Path $folder $f
     if (-not (Test-Path $p)) { Bad "Not found: $p"; return $false }
     Copy-Item $p (Join-Path $Data $f) -Force
     Ok "copied $f"
   }
+  if (Test-Path (Join-Path $folder 'bundle.json')) { Copy-Item (Join-Path $folder 'bundle.json') (Join-Path $Data 'team-bundle.json') -Force }
   $vp = Join-Path $folder 'speaker_profiles.json'
+  $local = Join-Path $Data 'speaker_profiles.json'
   if (Test-Path $vp) {
-    Say 'A voice-profile file is included. It lets the tool name the speakers automatically (works best when recorded on the same microphones).'
-    if (YesNo 'Use it?') { Copy-Item $vp (Join-Path $Data 'speaker_profiles.json') -Force; Ok 'voice profiles installed' }
+    if (-not (Test-Path $local)) {
+      Say 'A voice-profile file is included. It lets the tool name the speakers automatically (works best when recorded on the same microphones).'
+      if (YesNo 'Use it?') { Copy-Item $vp $local -Force; Ok 'voice profiles installed' }
+    } else {
+      # keep whatever this PC has learned; only add people it does not know yet
+      & $VenvPy (Join-Path $MinutesScripts 'speaker_profiles.py') merge $vp 2>$null | Where-Object { $_ -like 'merged*' } | ForEach-Object { Ok $_ }
+    }
   }
   return $true
 }
@@ -194,24 +210,35 @@ Ok 'All dependencies installed.'
 
 # ---------------------------------------------------------------- 4. team files
 Head '4/7  Team files from the maintainer'
-$needTeam = -not ((Test-Path (Join-Path $Data 'roster.local.md')) -and (Test-Path (Join-Path $Data 'team.local.json')))
-if ($needTeam) {
+$haveTeam = (Test-Path (Join-Path $Data 'roster.local.md')) -and (Test-Path (Join-Path $Data 'team.local.json'))
+$candidate = if ($TeamFiles) { $TeamFiles } elseif ($pf.teamFilesFound) { $pf.teamFilesFound.path } else { '' }
+if (-not $haveTeam) {
   Say 'The maintainer shares the team files on Teams (minutes-team-files.zip, or a folder with roster.local.md and team.local.json).'
-  $guess = if ($TeamFiles) { $TeamFiles } elseif ($pf.teamFilesFound) { $pf.teamFilesFound.path } else { '' }
-  if ($guess) { Say "  found one already downloaded: $guess" }
+  if ($candidate) { Say "  found one already downloaded: $candidate" }
   while ($true) {
-    $src = Ask 'Path to the zip or folder (download it first if you have not)' $guess
+    $src = Ask 'Path to the zip or folder (download it first if you have not)' $candidate
     if (-not $src -or -not (Test-Path $src)) { Bad 'Not found, try again.'; continue }
-    if (Import-TeamFiles $src) { break }
+    if (Import-TeamFiles (Expand-TeamSource $src)) { break }
   }
+} elseif ($candidate -and (Test-Path $candidate)) {
+  # already set up: offer an update only when the bundle on disk is newer than the one installed
+  $folder = Expand-TeamSource $candidate
+  $newStamp = Get-BundleStamp $folder
+  $oldStamp = $null
+  $oldFile = Join-Path $Data 'team-bundle.json'
+  if (Test-Path $oldFile) { try { $oldStamp = [string](Get-Content $oldFile -Raw | ConvertFrom-Json).builtAt } catch { } }
+  if ($newStamp -and ((-not $oldStamp) -or ($newStamp -gt $oldStamp))) {
+    Say "A newer team-files bundle was found ($newStamp): $candidate"
+    if (YesNo 'Update the roster and team settings from it?') { [void](Import-TeamFiles $folder) }
+  } else { Ok 'roster and team file already in place and up to date.' }
 } else { Ok 'roster and team file already in place.' }
 
-# config.json = team.local.json + this scribe's details
+# config.json = this scribe's details + the team file (the team file wins for the keys it defines, so updates apply)
 $cfgPath = Join-Path $Data 'config.json'
 $team = Get-Content (Join-Path $Data 'team.local.json') -Raw -Encoding UTF8 | ConvertFrom-Json
 $cfg = @{}
-foreach ($p in $team.PSObject.Properties) { $cfg[$p.Name] = $p.Value }
 if (Test-Path $cfgPath) { foreach ($p in (Get-Content $cfgPath -Raw -Encoding UTF8 | ConvertFrom-Json).PSObject.Properties) { $cfg[$p.Name] = $p.Value } }
+foreach ($p in $team.PSObject.Properties) { $cfg[$p.Name] = $p.Value }
 if (-not $cfg['scribe_name']) { $cfg['scribe_name'] = Ask 'Your full name as it should appear on the minutes' }
 if (-not $cfg['scribe_title']) { $cfg['scribe_title'] = Ask 'Your job title' }
 if (-not $cfg['model']) { $cfg['model'] = 'large-v3' }

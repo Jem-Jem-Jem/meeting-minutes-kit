@@ -57,6 +57,8 @@ active voice.
 
 - `scripts/build_minutes.py`: the scaffold builder. Run once per meeting, from a `meeting.json`.
 - `scripts/sign_minutes.py`: signature image + date. Run only when content is FROZEN.
+- `scripts/tracker_slice.py`: cut the tracker to the one week the meeting reports on.
+- `scripts/lint_minutes.py`: mechanical screen of a draft `meeting.json` against the transcript, tracker and roster.
 - `scripts/render_pdf.ps1`: Word to PDF to PNG pages, for a rough look at pagination.
 - `scripts/merge_mics.py`: two mic recordings (with chunks) to one mono file.
 - `scripts/transcribe.py`, `scripts/speaker_profiles.py`: audio to speaker-labelled transcript.

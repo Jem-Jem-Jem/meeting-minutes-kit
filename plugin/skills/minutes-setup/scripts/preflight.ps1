@@ -40,7 +40,31 @@ if ($Gate) {
   foreach ($f in 'config.json', 'roster.local.md', 'signature.png') { if (-not (Test-Path (Join-Path $Data $f))) { $why += "$f missing" } }
   if (-not (Find-Cmd 'ffmpeg')) { $why += 'ffmpeg not on PATH' }
   if ($why.Count) { Write-Host ('NOT READY: ' + ($why -join '; ')); exit 1 }
-  Write-Host 'READY'; exit 0
+  # a newer team-files bundle (roster / approver / voice prints) sitting in Downloads etc.? tell the user, still READY
+  $note = $null
+  try {
+    $oldStamp = $null
+    $of = Join-Path $Data 'team-bundle.json'
+    if (Test-Path $of) { $oldStamp = [string](Get-Content $of -Raw | ConvertFrom-Json).builtAt }
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    foreach ($r in 'Downloads', 'Desktop', 'Documents') {
+      $dir = Join-Path $env:USERPROFILE $r
+      if (-not (Test-Path $dir)) { continue }
+      foreach ($z in (Get-ChildItem $dir -Filter 'minutes-team-files*.zip' -File -ErrorAction SilentlyContinue)) {
+        $zip = [IO.Compression.ZipFile]::OpenRead($z.FullName)
+        try {
+          $e = $zip.Entries | Where-Object { $_.Name -eq 'bundle.json' } | Select-Object -First 1
+          if ($e) {
+            $sr = New-Object IO.StreamReader($e.Open()); $stamp = [string]((($sr.ReadToEnd()) | ConvertFrom-Json).builtAt); $sr.Dispose()
+            if ($stamp -and ((-not $oldStamp) -or ($stamp -gt $oldStamp))) { $note = "a newer team-files bundle is at $($z.FullName); re-run the setup wizard to update the roster and team settings" }
+          }
+        } finally { $zip.Dispose() }
+      }
+    }
+  } catch { }
+  Write-Host 'READY'
+  if ($note) { Write-Host ('NOTE: ' + $note) }
+  exit 0
 }
 
 function Get-PyInfo($exe, $prefixArgs) {
@@ -89,7 +113,7 @@ foreach ($f in 'config.json', 'roster.local.md', 'signature.png', 'speaker_profi
 
 # has the maintainer's team-file bundle already been downloaded somewhere obvious?
 $teamFiles = $null
-if (-not ($files['roster.local.md'] -and (Test-Path (Join-Path $Data 'team.local.json')))) {
+if ($true) {
   $roots = @('Downloads', 'Desktop', 'Documents') | ForEach-Object { Join-Path $env:USERPROFILE $_ }
   $roots += @(Get-ChildItem $env:USERPROFILE -Directory -Filter 'OneDrive*' | ForEach-Object { $_.FullName })
   foreach ($r in $roots) {
