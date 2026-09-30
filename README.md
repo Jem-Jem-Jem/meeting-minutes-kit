@@ -124,8 +124,7 @@ notes) and tell your agent: `write the meeting minutes`.
 - **The audio decides what was said.** Context only helps the agent get names, spellings and numbers right. It is
   optional: with none, the agent works from the audio alone and lists what it could not verify.
 - **Trackers** laid out one week per row or column (sheet per person is fine) are cut down to the one week the meeting
-  reports on automatically.
-
+  reports on.
 - **Two mics?** Put each mic's files in its own folder. The agent merges them, then asks you to listen to three
   short samples before it continues. (Developed with DJI Mic 3 files saved in 30-minute chunks.)
 - **Slow PC?** Transcription keeps the PC awake and resumes if it is interrupted: ask the agent to run it again.
