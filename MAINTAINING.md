@@ -46,6 +46,10 @@ folder that ever held real data.
 
 ## Install routes
 
+`pnpm dlx` (and `npx`) cache a fetched package for about a day, so a plain `pnpm dlx github:...` can install a stale version
+(seen 2026-09-30: installed 0.2.1 after 0.3.0 was pushed). Every documented pnpm command carries
+`--config.dlx-cache-max-age=0` for that reason.
+
 `install.ps1` (repo root) is the backup route for machines without Node or git: PowerShell only, no admin, no git, no Node. It mirrors `bin/cli.js`
 (marker file, refuses to overwrite foreign folders). Keep the two in step. Fetching `main` means every push is live for
 the next installer run, so test before pushing.

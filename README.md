@@ -43,9 +43,9 @@ Install route 3 needs neither.
 
 **1. pnpm / npx (any agent; needs Node.js 16.7+):**
 ```
-pnpm dlx github:Jem-Jem-Jem/meeting-minutes-kit install
+pnpm --config.dlx-cache-max-age=0 dlx github:Jem-Jem-Jem/meeting-minutes-kit install
 ```
-Copies the two skills into `~/.claude/skills` (read by Claude Code). Options: `--agents` (installs to
+(`--config.dlx-cache-max-age=0` matters: pnpm otherwise reuses a cached copy for a day and can install an old version.) Copies the two skills into `~/.claude/skills` (read by Claude Code). Options: `--agents` (installs to
 `~/.agents/skills`), `--dir <path>` (any folder, for example a project's `.agents/skills`), `uninstall`. The `github:`
 form also needs git (`npx github:...` works the same). Once released on npm it needs Node only:
 `pnpm dlx meeting-minutes-kit@latest install`. Freebuff scans `~/.claude/skills` when home skills are enabled; if your
