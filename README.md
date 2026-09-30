@@ -6,8 +6,9 @@ coding agent does the reading and writing, and your own PC does the transcriptio
 **Works with:** Claude Code (as a plugin, or as plain skills) and any other coding agent that reads `SKILL.md`
 skill folders and can run shell commands. Freebuff reads them natively and should work; that is untested so far.
 
-> **Status: early release (0.2.0).** Built and tested on one Windows 10 PC. A clean-machine test on a second PC is
-> still pending, so expect rough edges in the installer.
+> **Status: early release (0.3.x).** Developed on a Windows PC with an NVIDIA GPU (the author's) and installed on a clean PC
+> without a GPU (the first rotating scribe, via the Claude Code plugin route). Freebuff and other agents are expected to
+> work but have not been run yet. Expect rough edges and please report them.
 
 ## What it does
 
