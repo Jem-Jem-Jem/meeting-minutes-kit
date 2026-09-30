@@ -44,6 +44,12 @@ folder that ever held real data.
    repo without it, verified 2026-09-30, but a registry release is cleaner for non-git machines): `npm login` (once), then
    `pnpm publish --access public --no-git-checks`. Users update with `pnpm dlx meeting-minutes-kit@latest update`.
 
+## Install routes
+
+`install.ps1` (repo root) is the no-prerequisite route: PowerShell only, no admin, no git, no Node. It mirrors `bin/cli.js`
+(marker file, refuses to overwrite foreign folders). Keep the two in step. Fetching `main` means every push is live for
+the next installer run, so test before pushing.
+
 ## Testing
 
 - **No-GPU path on a GPU machine:** `MINUTES_FORCE_CPU=1` makes the preflight report `cpu`; put `"device": "cpu"`

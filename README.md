@@ -30,31 +30,41 @@ agent session.
 - Windows 10 (1809+) or 11, 64-bit. Desktop **Microsoft Word** (used to check page layout).
 - An AI coding agent: Claude Code (on a plan that includes it, for example Pro; it needs Git for Windows on Windows)
   or Freebuff (free, no account) or a similar agent.
-- **Node.js 16.7 or newer** for the install command below (`winget install OpenJS.NodeJS.LTS`). pnpm or npm both work.
 - 8 GB RAM or more and about 15 GB free disk (Python packages plus speech models).
 - An NVIDIA GPU is optional. Without one, an hour of meeting can take an hour or more to transcribe.
 - A free HuggingFace account: speaker identification uses a gated model whose licence you accept once.
 
 The setup wizard installs Python, ffmpeg and poppler if they are missing, by direct download into your own user
-folders. It needs **no administrator rights** and no winget. (Installing Node.js and Git for Windows themselves,
-which the install command and Claude Code need, normally asks for administrator approval once.)
+folders. It needs **no administrator rights** and no winget. The first install route below needs no Node.js and no
+git either. (Node.js and Git for Windows are only needed for the pnpm and plugin routes; installing them normally
+asks for administrator approval once.)
 
-## Install
+## Install (pick ONE route)
 
-**Any agent (recommended).** Copies the two skills into your agent's skills folder:
+**1. PowerShell one-liner: no admin, no git, no Node.js (recommended).** Paste into a normal PowerShell window:
 ```
-pnpm dlx meeting-minutes-kit@latest install
+iwr -useb https://raw.githubusercontent.com/Jem-Jem-Jem/meeting-minutes-kit/main/install.ps1 | iex
 ```
-- Straight from GitHub, no npm release needed (needs git): `pnpm dlx github:Jem-Jem-Jem/meeting-minutes-kit install`
-  (`npx github:Jem-Jem-Jem/meeting-minutes-kit install` works the same). This always installs the latest `main`.
-- Default target is `~/.claude/skills`, which Claude Code reads. Freebuff scans it too when home skills are enabled; if
-  your agent does not see the skills, use `--agents`, or `--dir` with a project's `.agents/skills`.
-- `--agents` installs to `~/.agents/skills` instead; `--dir <path>` to any folder (for example a project's
-  `.agents/skills`).
-- No npm access? Download this repo as a zip and copy the folders inside `plugin/skills/` into your agent's skills
-  folder by hand.
+It downloads this repo as a zip and copies the two skills into `~/.claude/skills` (read by Claude Code). Options:
+```
+& ([scriptblock]::Create((iwr -useb https://raw.githubusercontent.com/Jem-Jem-Jem/meeting-minutes-kit/main/install.ps1))) -Agents
+```
+- `-Agents` installs to `~/.agents/skills` instead; `-Dir <path>` to any folder (for example a project's
+  `.agents/skills`); `-Uninstall` removes what it installed; `-Ref <branch-or-tag>` picks a version.
+- Freebuff scans `~/.claude/skills` when home skills are enabled; if your agent does not see the skills, use `-Agents`
+  or `-Dir`.
+- Blocked from downloading? Get the zip in a browser, then run `install.ps1 -ZipPath <the zip>` (or copy the folders
+  inside `plugin/skills/` into your agent's skills folder by hand).
+- Re-running the same line updates. It never overwrites a skill folder it did not create.
 
-**Claude Code plugin (alternative; needs git).** Use this route *instead of* the one above, not as well:
+**2. pnpm / npx (needs Node.js 16.7+):**
+```
+pnpm dlx github:Jem-Jem-Jem/meeting-minutes-kit install
+```
+Same options as `--agents` / `--dir <path>` / `uninstall`. (`npx github:...` works too; needs git. Once released on
+npm: `pnpm dlx meeting-minutes-kit@latest install`.)
+
+**3. Claude Code plugin (needs git).** Use this *instead of* the routes above, not as well:
 ```
 /plugin marketplace add Jem-Jem-Jem/meeting-minutes-kit
 /plugin install meeting-minutes@meeting-minutes-kit
@@ -102,8 +112,7 @@ The document layout is fixed (`build_minutes.py`); changing the look means editi
 
 ## Update
 
-Any agent: `pnpm dlx meeting-minutes-kit@latest update` (same `--agents` / `--dir` flags as install). Claude Code plugin:
-`/plugin marketplace update meeting-minutes-kit`.
+Re-run the same install line (route 1 or 2). Claude Code plugin: `/plugin marketplace update meeting-minutes-kit`.
 If the version changed, the next job asks you to re-run the wizard once.
 
 ## If something goes wrong
