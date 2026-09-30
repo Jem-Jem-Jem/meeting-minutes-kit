@@ -46,7 +46,7 @@ folder that ever held real data.
 
 ## Install routes
 
-`install.ps1` (repo root) is the no-prerequisite route: PowerShell only, no admin, no git, no Node. It mirrors `bin/cli.js`
+`install.ps1` (repo root) is the backup route for machines without Node or git: PowerShell only, no admin, no git, no Node. It mirrors `bin/cli.js`
 (marker file, refuses to overwrite foreign folders). Keep the two in step. Fetching `main` means every push is live for
 the next installer run, so test before pushing.
 

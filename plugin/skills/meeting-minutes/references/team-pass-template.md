@@ -1,4 +1,4 @@
-# Team Pass (any chatbot, no install)
+# Team Pass (any chatbot, no agent needed)
 
 For anyone producing the minutes **without** a coding agent. Two parts: reconcile (any chatbot) and
 assemble (Word, no code). The maintainer supplies the team-specific blocks marked `[PASTE ...]`.
@@ -59,12 +59,35 @@ Do not add linking sentences, rationales, footnotes or explanations that the tra
 No em-dashes or en-dashes (ranges as "to"). Short declarative sentences for facts. Active voice. Cut process narration and anything a table already shows; keep decision rationale. Bold any date or money amount inside a discussion line.
 
 === OUTPUT ===
-A Markdown table: | S/N | Discussion Items | Action |. Section-heading rows as | **Heading** | | |. Each item: bold title line then "- " bullets in the Discussion cell; "- **Owner:** ..." bullets in the Action cell. Then an Appendix with the schedules the maintainer specified, numbers from the tracker. End with a list of every point you were unsure about.
+Reply with ONE JSON object and nothing else (no code fence, no commentary), exactly this shape:
+{
+  "date": "1 October 2030",
+  "time": "10:00 AM to 10:45 AM",
+  "venue": "...",
+  "attendance": ["Name, Job title"],
+  "not_present": ["Name, Job title. Reason as stated in the meeting"],
+  "items": [
+    {"section": "Section heading"},
+    {"title": "Item title (owner)", "discussion": ["bullet", "bullet"], "actions": ["Owner: what they will do"]}
+  ],
+  "closing": "There being no further business, the meeting concluded at 10:45 AM.",
+  "schedules": [
+    {"title": "Schedule 1: ...", "columns": ["Category", "Count"], "rows": [["...", "9"]]}
+  ],
+  "unsure": ["every point you were unsure about, one string each"]
+}
+Use an empty "actions" list when nobody was assigned (the builder writes "For noting."). Numbers in schedules come from the tracker. Do not add keys other than the ones shown.
 
 Ready. Paste the transcript.
 ```
 
-## ASSEMBLE (no code)
+## BUILD THE DOCUMENT
+
+**With the kit installed (recommended):** save the chatbot's reply as `meeting.json` and run
+`<kit python> build_minutes.py meeting.json "DD-MM-YYYY meeting minutes.docx"` (see the README), then review it in Word and
+run `sign_minutes.py` when the content is final.
+
+## ASSEMBLE BY HAND (no code at all)
 
 1. Get the blank template docx from the maintainer. It has the header block, a pre-styled 3-column table with section bands, the sign-off block and empty appendix schedules, all in house format.
 2. Fill the header (date, time, venue, attendance, not-present).

@@ -35,40 +35,40 @@ agent session.
 - A free HuggingFace account: speaker identification uses a gated model whose licence you accept once.
 
 The setup wizard installs Python, ffmpeg and poppler if they are missing, by direct download into your own user
-folders. It needs **no administrator rights** and no winget. The first install route below needs no Node.js and no
-git either. (Node.js and Git for Windows are only needed for the pnpm and plugin routes; installing them normally
-asks for administrator approval once.)
+folders. It needs **no administrator rights** and no winget. Node.js is needed only for install route 1 and git only
+for route 2 (and for Claude Code itself on Windows); installing either normally asks for administrator approval once.
+Install route 3 needs neither.
 
 ## Install (pick ONE route)
 
-**1. PowerShell one-liner: no admin, no git, no Node.js (recommended).** Paste into a normal PowerShell window:
-```
-iwr -useb https://raw.githubusercontent.com/Jem-Jem-Jem/meeting-minutes-kit/main/install.ps1 | iex
-```
-It downloads this repo as a zip and copies the two skills into `~/.claude/skills` (read by Claude Code). Options:
-```
-& ([scriptblock]::Create((iwr -useb https://raw.githubusercontent.com/Jem-Jem-Jem/meeting-minutes-kit/main/install.ps1))) -Agents
-```
-- `-Agents` installs to `~/.agents/skills` instead; `-Dir <path>` to any folder (for example a project's
-  `.agents/skills`); `-Uninstall` removes what it installed; `-Ref <branch-or-tag>` picks a version.
-- Freebuff scans `~/.claude/skills` when home skills are enabled; if your agent does not see the skills, use `-Agents`
-  or `-Dir`.
-- Blocked from downloading? Get the zip in a browser, then run `install.ps1 -ZipPath <the zip>` (or copy the folders
-  inside `plugin/skills/` into your agent's skills folder by hand).
-- Re-running the same line updates. It never overwrites a skill folder it did not create.
-
-**2. pnpm / npx (needs Node.js 16.7+):**
+**1. pnpm / npx (any agent; needs Node.js 16.7+):**
 ```
 pnpm dlx github:Jem-Jem-Jem/meeting-minutes-kit install
 ```
-Same options as `--agents` / `--dir <path>` / `uninstall`. (`npx github:...` works too; needs git. Once released on
-npm: `pnpm dlx meeting-minutes-kit@latest install`.)
+Copies the two skills into `~/.claude/skills` (read by Claude Code). Options: `--agents` (installs to
+`~/.agents/skills`), `--dir <path>` (any folder, for example a project's `.agents/skills`), `uninstall`. The `github:`
+form also needs git (`npx github:...` works the same). Once released on npm it needs Node only:
+`pnpm dlx meeting-minutes-kit@latest install`. Freebuff scans `~/.claude/skills` when home skills are enabled; if your
+agent does not see the skills, use `--agents` or `--dir`.
 
-**3. Claude Code plugin (needs git).** Use this *instead of* the routes above, not as well:
+**2. Claude Code plugin (needs git).** Use this *instead of* route 1, not as well:
 ```
 /plugin marketplace add Jem-Jem-Jem/meeting-minutes-kit
 /plugin install meeting-minutes@meeting-minutes-kit
 ```
+
+**3. Backup: PowerShell installer (no admin, no git, no Node).** For machines where routes 1 and 2 are not possible.
+Paste into a normal PowerShell window:
+```
+iwr -useb https://raw.githubusercontent.com/Jem-Jem-Jem/meeting-minutes-kit/main/install.ps1 | iex
+```
+It downloads this repo as a zip and copies the same two skills. With options:
+```
+& ([scriptblock]::Create((iwr -useb https://raw.githubusercontent.com/Jem-Jem-Jem/meeting-minutes-kit/main/install.ps1))) -Agents
+```
+`-Agents`, `-Dir <path>`, `-Uninstall`, `-Ref <branch-or-tag>`. Blocked from downloading? Get the zip in a browser, then run
+`install.ps1 -ZipPath <the zip>`, or copy the folders inside `plugin/skills/` into your agent's skills folder by hand.
+Re-running updates. It never overwrites a skill folder it did not create.
 
 ## Set up (once per computer)
 
@@ -82,6 +82,20 @@ to paste into a normal PowerShell window (the wizard asks questions, so it canno
 
 It finishes by building a sample document, testing the two-microphone merge and transcribing a short test
 recording, then tells you how long a real meeting will take on your PC. Re-running the wizard is safe.
+
+## If your agent cannot run commands on your PC
+
+Some setups (a chat-only app, a locked-down PC) cannot run local commands. The scripts do not need an agent, so you
+can run them yourself and use any chatbot only for the reading and writing step:
+
+1. Run the setup wizard yourself in a normal PowerShell window (no admin needed). It is
+   `plugin/skills/minutes-setup/scripts/setup.ps1`; run it with `powershell -ExecutionPolicy Bypass -File <path>`.
+2. Merge mics and transcribe with the kit's Python (`%USERPROFILE%\.claude\meeting-minutesenv\Scripts\python.exe`):
+   `merge_mics.py`, then `transcribe.py`. Both print usage with `--help`.
+3. Paste the "Team Pass" prompt (`plugin/skills/meeting-minutes/references/team-pass-template.md`), the transcript and the
+   tracker into a chatbot. It answers with a `meeting.json`.
+4. Save that as `meeting.json` and run `build_minutes.py meeting.json "DD-MM-YYYY meeting minutes.docx"`, review in Word,
+   then `sign_minutes.py`.
 
 ## Your team's files
 
@@ -112,7 +126,7 @@ The document layout is fixed (`build_minutes.py`); changing the look means editi
 
 ## Update
 
-Re-run the same install line (route 1 or 2). Claude Code plugin: `/plugin marketplace update meeting-minutes-kit`.
+Re-run the same install line you used. Claude Code plugin: `/plugin marketplace update meeting-minutes-kit`.
 If the version changed, the next job asks you to re-run the wizard once.
 
 ## If something goes wrong
