@@ -67,7 +67,8 @@ openpyxl 3.1.5. Bump them together, then rerun the end-to-end test.
 
 - Word desktop is required (the pagination check uses it). There is no LibreOffice fallback.
 - Voice profiles enrolled on one microphone match less well on another.
-- The direct-download installers (used when winget is missing) have only been checked as far as their URLs
-  resolving; the first PC without winget is their real test.
+- Python, ffmpeg and poppler are installed by direct per-user download (no admin, no winget; winget is only the
+  fallback). The zip unpack + bin detection is tested; the Python per-user installer run and the user-PATH edit
+  are not, so the first clean PC is their real test. Node.js (MSI) and Git for Windows still need admin once.
 - Two table mics never line up perfectly for every speaker (different distances), so always listen to the
   merge samples.

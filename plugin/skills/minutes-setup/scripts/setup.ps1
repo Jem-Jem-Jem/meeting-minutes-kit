@@ -67,14 +67,16 @@ function Winget-Install($id, $label) {
 }
 # Each installer tries winget first, then a direct download (for PCs without winget or where it is blocked).
 function Install-Python {
-  if (Winget-Install 'Python.Python.3.12' 'Python 3.12') { return $true }
+  # Per-user install straight from python.org: needs no administrator rights and no winget.
   $v = $Kit.python.installVersion
   $exe = Join-Path $env:TEMP "python-$v-amd64.exe"
-  if (-not (Download "https://www.python.org/ftp/python/$v/python-$v-amd64.exe" $exe)) { return $false }
-  Say '  running the Python installer (per-user, no admin needed) ...'
-  Start-Process -Wait -FilePath $exe -ArgumentList '/quiet', 'InstallAllUsers=0', 'PrependPath=1', 'Include_test=0', 'Include_launcher=1'
-  Refresh-Path
-  return $true
+  if (Download "https://www.python.org/ftp/python/$v/python-$v-amd64.exe" $exe) {
+    Say '  running the Python installer (per-user, no admin needed) ...'
+    Start-Process -Wait -FilePath $exe -ArgumentList '/quiet', 'InstallAllUsers=0', 'PrependPath=1', 'Include_test=0', 'Include_launcher=1'
+    Refresh-Path
+    return $true
+  }
+  return (Winget-Install 'Python.Python.3.12' 'Python 3.12')
 }
 function Install-Zip-Tool($name, $url, $binPattern) {
   $zip = Join-Path $env:TEMP "$name.zip"
@@ -90,17 +92,17 @@ function Install-Zip-Tool($name, $url, $binPattern) {
   return $true
 }
 function Install-Ffmpeg {
-  if (Winget-Install 'Gyan.FFmpeg' 'ffmpeg') { return $true }
-  Install-Zip-Tool 'ffmpeg' 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip' 'ffmpeg.exe'
+  # Portable zip unpacked into the kit's own folder: no administrator rights needed.
+  if (Install-Zip-Tool 'ffmpeg' 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip' 'ffmpeg.exe') { return $true }
+  return (Winget-Install 'Gyan.FFmpeg' 'ffmpeg')
 }
 function Install-Poppler {
-  if (Winget-Install 'oschwartz10612.Poppler' 'poppler') { return $true }
   try {
     $rel = Invoke-RestMethod -Uri 'https://api.github.com/repos/oschwartz10612/poppler-windows/releases/latest' -UseBasicParsing -TimeoutSec 30
     $asset = $rel.assets | Where-Object { $_.name -like '*.zip' } | Select-Object -First 1
-    if (-not $asset) { Bad 'no poppler zip found in the latest release'; return $false }
-    Install-Zip-Tool 'poppler' $asset.browser_download_url 'pdftoppm.exe'
-  } catch { Bad "poppler lookup failed: $($_.Exception.Message)"; return $false }
+    if ($asset -and (Install-Zip-Tool 'poppler' $asset.browser_download_url 'pdftoppm.exe')) { return $true }
+  } catch { Warn "poppler direct download failed: $($_.Exception.Message)" }
+  return (Winget-Install 'oschwartz10612.Poppler' 'poppler')
 }
 function Pip($pipArgs) {
   & $VenvPy -m pip @pipArgs
@@ -153,6 +155,7 @@ if ($pf.toInstall.Count -eq 0) {
   $sizes = @{ 'python' = 'about 100 MB'; 'ffmpeg' = 'about 150 MB'; 'poppler' = 'about 40 MB'; 'python-packages' = 'about 2 to 3 GB, into its own folder (does not touch your other Python)' }
   foreach ($t in $pf.toInstall) { Say ("  - {0}: {1}" -f $t, $sizes[$t]) }
   Say '  Speech models download on first use (about 3 to 4 GB more).'
+  Say '  None of this needs administrator rights: everything goes into your own user folders.'
   if (-not (YesNo 'Install these now?')) { Say 'Nothing changed. Run the wizard again when ready.'; exit 0 }
 }
 

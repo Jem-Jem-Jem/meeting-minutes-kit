@@ -35,8 +35,9 @@ agent session.
 - An NVIDIA GPU is optional. Without one, an hour of meeting can take an hour or more to transcribe.
 - A free HuggingFace account: speaker identification uses a gated model whose licence you accept once.
 
-The setup wizard installs Python, ffmpeg and poppler if they are missing (with winget, or direct downloads when
-winget is unavailable).
+The setup wizard installs Python, ffmpeg and poppler if they are missing, by direct download into your own user
+folders. It needs **no administrator rights** and no winget. (Installing Node.js and Git for Windows themselves,
+which the install command and Claude Code need, normally asks for administrator approval once.)
 
 ## Install
 
