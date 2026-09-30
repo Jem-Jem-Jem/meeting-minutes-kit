@@ -3,12 +3,13 @@
 Turn a meeting recording and a weekly tracker into a signed, consistently formatted minutes document. An AI
 coding agent does the reading and writing, and your own PC does the transcription.
 
+**This tool needs a capable coding agent**: one that can run shell commands, read and write files, and follow long
+written instructions reliably. It has many steps and a compliance-grade output, so a weak agent will do it badly.
+
 **Works with:** Claude Code (as a plugin, or as plain skills) and any other coding agent that reads `SKILL.md`
 skill folders and can run shell commands. Freebuff reads them natively and should work; that is untested so far.
 
-> **Status: early release (0.3.x).** Developed on a Windows PC with an NVIDIA GPU (the author's) and installed on a clean PC
-> without a GPU (the first rotating scribe, via the Claude Code plugin route). Freebuff and other agents are expected to
-> work but have not been run yet. Expect rough edges and please report them.
+> **Status: early release (0.3.x).** Expect rough edges; please report them.
 
 ## What it does
 
@@ -58,7 +59,8 @@ agent does not see the skills, use `--agents` or `--dir`.
 /plugin install meeting-minutes@meeting-minutes-kit
 ```
 
-**3. Backup: PowerShell installer (no admin, no git, no Node).** For machines where routes 1 and 2 are not possible.
+**3. Backup, not recommended: PowerShell installer (no admin, no git, no Node).** Only for machines where routes 1 and 2
+are impossible. If a PC cannot run Node or git, ask whether it can run a capable agent at all.
 Paste into a normal PowerShell window:
 ```
 iwr -useb https://raw.githubusercontent.com/Jem-Jem-Jem/meeting-minutes-kit/main/install.ps1 | iex

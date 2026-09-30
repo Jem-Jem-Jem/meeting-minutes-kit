@@ -41,13 +41,13 @@ folder that ever held real data.
    plugin when its `version` changes, so bump `plugin/.claude-plugin/plugin.json` (and `package.json`) for ANY content
    change; `kitVersion` in `kit.json` changes only when the wizard or the pins change (it forces a wizard re-run).
 4. npm route (the any-agent install; `pnpm dlx github:Jem-Jem-Jem/meeting-minutes-kit install` already works from the
-   repo without it, verified 2026-09-30, but a registry release is cleaner for non-git machines): `npm login` (once), then
+   repo without it, but a registry release is cleaner for non-git machines): `npm login` (once), then
    `pnpm publish --access public --no-git-checks`. Users update with `pnpm dlx meeting-minutes-kit@latest update`.
 
 ## Install routes
 
 `pnpm dlx` (and `npx`) cache a fetched package for about a day, so a plain `pnpm dlx github:...` can install a stale version
-(seen 2026-09-30: installed 0.2.1 after 0.3.0 was pushed). Every documented pnpm command carries
+(an old version was installed right after a newer one was pushed). Every documented pnpm command carries
 `--config.dlx-cache-max-age=0` for that reason.
 
 `install.ps1` (repo root) is the backup route for machines without Node or git: PowerShell only, no admin, no git, no Node. It mirrors `bin/cli.js`
@@ -59,7 +59,7 @@ the next installer run, so test before pushing.
 - **No-GPU path on a GPU machine:** `MINUTES_FORCE_CPU=1` makes the preflight report `cpu`; put `"device": "cpu"`
   in `team.local.json` to force the transcriber onto the CPU. `MINUTES_HOME=<temp folder>` keeps the test away from
   your real data (`%USERPROFILE%\.claude\meeting-minutes`).
-- **Clean machine:** the best test is the first real scribe's PC. Otherwise use Windows Sandbox (Windows 10/11
+- **Clean machine:** the best test is a real second PC. Otherwise use Windows Sandbox (Windows 10/11
   Pro; enable it once from an admin PowerShell with
   `Enable-WindowsOptionalFeature -Online -FeatureName Containers-DisposableClientVM -All`, then reboot). Copy the
   kit folder and the team zip into the sandbox and run `setup.ps1` by hand. A sandbox has no Word, so set
@@ -83,23 +83,21 @@ openpyxl 3.1.5. Bump them together, then rerun the end-to-end test.
 - Two table mics never line up perfectly for every speaker (different distances), so always listen to the
   merge samples.
 
-## Rotation and the non-Claude scribe (Freebuff test checklist)
+## Testing with a non-Claude agent (for example Freebuff)
 
-Scribes rotate monthly. The first scribe runs Claude Code via the plugin route (installed and working as of
-2026-09-30). A scribe without a Claude plan would use Freebuff (or another `SKILL.md`-reading agent). Nothing about that
-has been run yet. On that day:
+Nothing about a non-Claude agent has been run in this repo yet. When you try one:
 
-1. Install with route 3 (PowerShell installer) or route 1, default target `~/.claude/skills`. Start Freebuff and ask what
-   skills it has. If it doesn't list `meeting-minutes` and `minutes-setup`, reinstall with `-Agents`, or with `-Dir` into
-   the project folder's `.agents/skills` and start Freebuff from that folder.
+1. Install with route 1 (or route 3), default target `~/.claude/skills`. Start the agent and ask what skills it has. If it
+   doesn't list `meeting-minutes` and `minutes-setup`, reinstall with `--agents` / `-Agents`, or with `--dir` / `-Dir`
+   into the project folder's `.agents/skills`, and start the agent from that folder.
 2. The scribe runs the wizard themselves (it is interactive). Then `preflight.ps1 -Gate` must print READY.
 3. On a short recording, watch for: reads `roster.local.md`; calls the venv Python, not a bare `python`; backgrounds the
    transcription or hands the command over; merges mics and stops for the listening check; asks who unnamed voices are
-   instead of guessing; writes `meeting.json`; builds and renders the docx; lists what it was unsure about; does NOT sign
-   before being told the content is final.
-4. Score it against ground truth: replay the 22 Sep 2026 audio and tracker and compare with the signed minutes (invented
+   instead of guessing; writes `meeting.json`; runs the linter; builds and renders the docx; lists what it was unsure
+   about; does NOT sign before being told the content is final.
+4. Score it against ground truth: replay a past meeting's audio and tracker and compare with its signed minutes (invented
    sentences, wrong action owner, wrong tracker column, misspelled names, numbers not in the sources).
-5. If it is not good enough, fall back to the chat-only route in the README ("If your agent cannot run commands").
+5. If it is not good enough, do not lower the bar: use a better agent. The chat-only route in the README is a last resort.
 
 New scribes' voices: each scribe's `speaker_profiles.json` grows locally as they name and enroll voices. Collect it if
 you want the improved prints in the next team bundle (rebuild with `tools/make-team-bundle.ps1 -IncludeVoices`).
