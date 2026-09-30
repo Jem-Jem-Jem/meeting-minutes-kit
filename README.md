@@ -90,7 +90,7 @@ can run them yourself and use any chatbot only for the reading and writing step:
 
 1. Run the setup wizard yourself in a normal PowerShell window (no admin needed). It is
    `plugin/skills/minutes-setup/scripts/setup.ps1`; run it with `powershell -ExecutionPolicy Bypass -File <path>`.
-2. Merge mics and transcribe with the kit's Python (`%USERPROFILE%\.claude\meeting-minutesenv\Scripts\python.exe`):
+2. Merge mics and transcribe with the kit's Python (`%USERPROFILE%\.claude\meeting-minutes\venv\Scripts\python.exe`):
    `merge_mics.py`, then `transcribe.py`. Both print usage with `--help`.
 3. Paste the "Team Pass" prompt (`plugin/skills/meeting-minutes/references/team-pass-template.md`), the transcript and the
    tracker into a chatbot. It answers with a `meeting.json`.
