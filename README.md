@@ -84,7 +84,9 @@ Re-running updates. It never overwrites a skill folder it did not create.
 ## Set up (once per computer)
 
 Restart your agent, then tell it: `set up the minutes tool`. The agent checks your machine and gives you one command
-to paste into a normal PowerShell window (the wizard asks questions, so it cannot run inside an agent). It asks for:
+to paste into a normal PowerShell window (the wizard asks questions, so it cannot run inside an agent). Use a
+standalone window, not a terminal panel inside the Claude app or an editor: the speed test runs the machine flat out
+and has frozen an app's built-in terminal. It asks for:
 
 1. your team's files (see below), which it looks for in Downloads, Desktop, Documents and OneDrive by itself,
 2. your name and job title,
