@@ -34,6 +34,10 @@ function pluginInstalled() {
 }
 
 if (cmd === "install" || cmd === "update") {
+  if (process.platform !== "win32") {
+    console.error("meeting-minutes-kit is Windows-only for now (the setup wizard, Word check and transcription use Windows). Nothing was installed.");
+    process.exit(1);
+  }
   if (dest === path.join(os.homedir(), ".claude", "skills") && pluginInstalled()) {
     console.error("The meeting-minutes plugin is already installed in Claude Code. Use one route, not both. Remove the plugin with '/plugin' first.");
     process.exit(1);
