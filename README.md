@@ -49,6 +49,8 @@ Install route 3 needs neither.
 ```
 pnpm --config.dlx-cache-max-age=0 dlx meeting-minutes-kit@latest install
 ```
+or, with plain npm: `npx meeting-minutes-kit@latest install` (no release-age wait). `npm i meeting-minutes-kit`
+only downloads the package into a `node_modules` folder and installs nothing; use one of the two lines above.
 `--config.dlx-cache-max-age=0` matters: pnpm otherwise reuses a cached copy for a day and can install an old version.
 pnpm 11 also skips any release less than a day old (a safety default against hijacked packages), so a new version
 reaches this route a day after it is published. Leave that default alone.
