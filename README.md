@@ -10,8 +10,6 @@ written instructions reliably. It has many steps and a compliance-grade output, 
 **Works with:** Claude Code (as a plugin, or as plain skills) and any other coding agent that reads `SKILL.md`
 skill folders and can run shell commands. Freebuff reads them natively and should work; that is untested so far.
 
-> **Status: early release (0.3.x).** Expect rough edges; please report them.
-
 ## What it does
 
 1. **Merges two table microphones** into one recording (optional; measured alignment, not file timecodes).
@@ -35,7 +33,8 @@ agent session.
 - An AI coding agent: Claude Code (on a plan that includes it, for example Pro; it needs Git for Windows on Windows)
   or Freebuff (free, no account) or a similar agent.
 - 8 GB RAM or more and about 15 GB free disk (Python packages plus speech models).
-- An NVIDIA GPU is optional. Without one, an hour of meeting can take an hour or more to transcribe.
+- An NVIDIA GPU is optional. Without one, an hour of meeting takes about an hour on a fast desktop CPU and
+  several hours on a low-power laptop CPU (the wizard measures yours).
 - A free HuggingFace account: speaker identification uses a gated model whose licence you accept once.
 
 The setup wizard installs Python, ffmpeg and poppler if they are missing, by direct download into your own user
