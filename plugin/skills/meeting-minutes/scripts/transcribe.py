@@ -26,6 +26,11 @@ import site
 import sys
 import time
 
+# Nothing about a meeting leaves this PC: pyannote reports usage (audio length, speaker counts) to its
+# servers by default, and Hugging Face sends usage data with downloads. Both off, always.
+os.environ["PYANNOTE_METRICS_ENABLED"] = "false"
+os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
+
 DATA_DIR = os.environ.get("MINUTES_HOME") or os.path.join(os.path.expanduser("~"), ".claude", "meeting-minutes")
 
 # CUDA DLL PATH gotcha: nvidia pip packages ship their DLLs but CTranslate2/torch only

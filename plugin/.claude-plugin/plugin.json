@@ -1,6 +1,6 @@
 {
   "name": "meeting-minutes",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Weekly meeting-minutes workflow: machine setup wizard, whisperx transcription, tracker reconcile rules, docx builder.",
   "author": {
     "name": "Jem-Jem-Jem"

@@ -23,6 +23,11 @@ import os
 import shutil
 import sys
 
+# Nothing about a meeting leaves this PC: pyannote reports usage (audio length, speaker counts) to its
+# servers by default, and Hugging Face sends usage data with downloads. Both off, always.
+os.environ["PYANNOTE_METRICS_ENABLED"] = "false"
+os.environ["HF_HUB_DISABLE_TELEMETRY"] = "1"
+
 import numpy as np
 import torch
 import whisperx

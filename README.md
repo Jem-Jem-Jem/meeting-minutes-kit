@@ -26,6 +26,8 @@ Two agent skills make this up:
 
 Audio is transcribed on your PC. The agent reads the transcript and your context files to write the minutes, as in any
 agent session.
+The transcription libraries' own usage reporting (pyannote's is on by default, and Hugging Face's) is switched off,
+so nothing about your meetings is sent anywhere by the transcription step.
 
 ## Requirements
 
