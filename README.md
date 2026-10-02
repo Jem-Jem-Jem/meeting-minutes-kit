@@ -118,8 +118,10 @@ See `examples/team/` for fictional samples. The maintainer packs them with
 `tools/make-team-bundle.ps1` into `minutes-team-files.zip` and shares that privately (for example on Teams).
 They are copied to `%USERPROFILE%\.claude\meeting-minutes`, and updates never touch that folder.
 
-Optional: put your own Word file at `%USERPROFILE%\.claude\meeting-minutes\template.docx` and the minutes are built
-on it, keeping its page size, margins, fonts, letterhead, headers, footers and page numbers. Its body text is dropped.
+Page layout: on the first run the agent asks whether to use the bundled layout, make one from your description, or
+copy an example .docx you give it (past minutes, a letterhead). A custom layout is saved as
+`%USERPROFILE%\.claude\meeting-minutes\template.docx`: its page size, margins, fonts, headers, footers and page numbers
+carry over, its body text is dropped.
 
 ## Each week
 
@@ -137,13 +139,29 @@ notes) and tell your agent: `write the meeting minutes`.
 - **Review before signing.** The agent lists what it was unsure about. You check the `.docx` in Word, and only then
   does it sign.
 
-The document layout is fixed (`build_minutes.py`); changing the look means editing that script.
+The table structure is fixed (`build_minutes.py`). Page size, fonts, letterhead, headers and footers come from the
+layout you chose (see above).
 
 ## Update
 
-Re-run the same install line you used. Claude Code plugin: `claude plugin marketplace update meeting-minutes-kit`, then `claude plugin update meeting-minutes@meeting-minutes-kit`,
-then restart (the first only refreshes the listing; the second updates the plugin).
-If the version changed, the next job asks you to re-run the wizard once.
+There are two kinds of update. Do them in this order when both arrive together.
+
+**1. New team files** (the maintainer shares a new `minutes-team-files.zip`: roster changes, a new approver, voice
+prints added or removed). Download it into Downloads, Desktop or Documents. Delete the old zip. The tool only reads
+the zip during setup, so the next job will tell you a newer one is there and offer to re-run the wizard: say yes.
+
+**2. New kit version.** Run the line for the route you installed with:
+
+- Route 1: `pnpm --config.dlx-cache-max-age=0 dlx meeting-minutes-kit@latest update` (keep the cache flag, or pnpm can
+  reuse yesterday's copy).
+- Route 2 (Claude Code plugin): `claude plugin marketplace update meeting-minutes-kit`, then
+  `claude plugin update meeting-minutes@meeting-minutes-kit`, then restart Claude Code. The first command only
+  refreshes the listing; the second updates the plugin.
+- Route 3: re-run the same PowerShell line.
+
+If the new version changes the setup, the next job stops and asks you to re-run the wizard. It skips everything already
+installed but repeats the short speed test. Your data folder (`%USERPROFILE%\.claude\meeting-minutes`) is never
+touched by an update.
 
 ## If something goes wrong
 

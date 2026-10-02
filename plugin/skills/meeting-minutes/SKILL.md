@@ -84,6 +84,15 @@ skill's `scripts` folder. Always call `PY`, never a bare `python`.
    a number, name or reason word it flags is either wrong or needs to be true from the source. Whatever you keep goes on the
    review list for the user. A clean lint is not proof the minutes are right.
 4. **Build** the docx once: `PY S\build_minutes.py meeting.json "DD-MM-YYYY meeting minutes.docx"`.
+   **Layout (ask once, then remember).** If `config.json` has no `"layout"` key and there is no
+   `%USERPROFILE%\.claude\meeting-minutes\template.docx`, ask the user which page layout to use:
+   - **Bundled**: the kit's own layout. Set `"layout": "bundled"` in `config.json`.
+   - **You make one**: ask for page size, margins, font, header and footer text, logo image, page numbers. Write
+     a docx with exactly that (python-docx, no body text) to `template.docx` in that folder. Render it and show the user.
+   - **Their example**: the user gives a .docx (past minutes, a letterhead). Copy it to `template.docx`.
+   With `template.docx` present, the builder keeps its page size, margins, fonts, headers and footers, drops its body
+   text, and fits the tables to its page width. The table layout itself always comes from the builder. Set
+   `"layout": "template"`. The user can change their mind any time: delete `template.docx` and the `layout` key.
 5. **Verify**: `powershell -ExecutionPolicy Bypass -File S\render_pdf.ps1 "<docx>"`, then read the PDF/PNG pages:
    pagination, no bullet broken mid-page, sign-off block whole. This is a rough check only (see references/format.md).
 6. **Human review gate.** Before anything is signed, give the user the list of points you were unsure about

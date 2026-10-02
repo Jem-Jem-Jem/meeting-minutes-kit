@@ -42,6 +42,8 @@ n = next(x for x in num.findall(qn("w:num")) if x.get(qn("w:numId")) == bullet_i
 aid = n.find(qn("w:abstractNumId")).get(qn("w:val"))
 assert any(a.get(qn("w:abstractNumId")) == aid for a in num.findall(qn("w:abstractNum"))), "bullet definition missing"
 assert "Table Grid" in [s.name for s in d.styles]
+sec = d.sections[0]
+assert sum(c.width for c in d.tables[0].rows[0].cells) <= sec.page_width - sec.left_margin - sec.right_margin + 5000, "table wider than the page"
 
 os.remove(os.path.join(home, "template.docx"))  # no template: the plain path still works
 r = subprocess.run([sys.executable, os.path.join(S, "build_minutes.py"), os.path.join(S, "meeting.example.json"), out],

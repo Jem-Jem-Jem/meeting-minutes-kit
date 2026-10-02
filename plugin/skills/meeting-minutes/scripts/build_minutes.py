@@ -88,11 +88,15 @@ def action_bullet(cell, text, first):
         p.add_run(text).font.size = Pt(10)
 
 
+TABLE_WIDTH = 6.5   # inches every table's widths add up to; a team template rescales them to its own text width
+_scale = 1.0
+
+
 def set_widths(table, widths):
     table.autofit = False
     for row in table.rows:
         for i, w in enumerate(widths):
-            row.cells[i].width = Inches(w)
+            row.cells[i].width = Inches(w * _scale)
 
 
 def cell_text(cell, text, bold=False, size=10.5, color=None, align=None):
@@ -177,7 +181,10 @@ def build(m, cfg, out):
     preparer = m.get('preparer') or cfg.get('scribe_name') or ''
     approver = m.get('approver') or cfg.get('approver_name') or ''
 
+    global _scale
     doc, templated = base_document()
+    sec = doc.sections[0]
+    _scale = (sec.page_width - sec.left_margin - sec.right_margin) / Inches(TABLE_WIDTH) if templated else 1.0
     if not templated:  # a team template keeps its own fonts
         st = doc.styles['Normal']
         st.font.name = 'Calibri'
