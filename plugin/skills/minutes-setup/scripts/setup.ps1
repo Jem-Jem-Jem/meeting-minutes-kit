@@ -65,7 +65,7 @@ function Winget-Install($id, $label) {
   Refresh-Path
   return $true
 }
-# Each installer tries winget first, then a direct download (for PCs without winget or where it is blocked).
+# Each installer tries a direct download first (no admin, no winget), then winget as a fallback.
 function Install-Python {
   # Per-user install straight from python.org: needs no administrator rights and no winget.
   $v = $Kit.python.installVersion
