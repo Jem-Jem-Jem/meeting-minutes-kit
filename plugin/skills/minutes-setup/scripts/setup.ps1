@@ -20,6 +20,16 @@ $Data = if ($env:MINUTES_HOME) { $env:MINUTES_HOME } else { Join-Path $env:USERP
 $VenvDir = Join-Path $Data 'venv'
 $VenvPy = Join-Path $VenvDir 'Scripts\python.exe'
 $Tools = Join-Path $Data 'tools'
+$Uv = Join-Path $Data 'bin\uv.exe'
+$EnvDir = Join-Path (Split-Path $Here) 'env'
+$LockFile = Join-Path $EnvDir 'uv.lock'
+# uv keeps its Python, its download cache and the environment inside the data folder, and ignores any
+# uv settings elsewhere on this PC (so nothing can point it at another package index).
+$env:UV_PYTHON_INSTALL_DIR = Join-Path $Data 'python'
+$env:UV_CACHE_DIR = Join-Path $Data 'uv-cache'
+$env:UV_PROJECT_ENVIRONMENT = $VenvDir
+$env:UV_PYTHON_PREFERENCE = 'only-managed'
+$env:UV_NO_CONFIG = '1'
 New-Item -ItemType Directory -Force -Path $Data | Out-Null
 
 function Say($t) { Write-Host $t }
@@ -57,56 +67,38 @@ function Download($url, $out) {
   try { Invoke-WebRequest -Uri $url -OutFile $out -UseBasicParsing -TimeoutSec 900; return (Test-Path $out) }
   catch { Bad "download failed: $($_.Exception.Message)"; return $false }
 }
-function Winget-Install($id, $label) {
-  if (-not (Get-Command winget -ErrorAction SilentlyContinue)) { return $false }
-  Say "  installing $label with winget ..."
-  & winget install -e --id $id --silent --accept-package-agreements --accept-source-agreements
-  if ($LASTEXITCODE -ne 0 -and $LASTEXITCODE -ne -1978335189) { Warn "winget could not install $label (code $LASTEXITCODE)"; return $false }  # -1978335189 = already installed
-  Refresh-Path
-  return $true
-}
-# Each installer tries a direct download first (no admin, no winget), then winget as a fallback.
-function Install-Python {
-  # Per-user install straight from python.org: needs no administrator rights and no winget.
-  $v = $Kit.python.installVersion
-  $exe = Join-Path $env:TEMP "python-$v-amd64.exe"
-  if (Download "https://www.python.org/ftp/python/$v/python-$v-amd64.exe" $exe) {
-    Say '  running the Python installer (per-user, no admin needed) ...'
-    Start-Process -Wait -FilePath $exe -ArgumentList '/quiet', 'InstallAllUsers=0', 'PrependPath=1', 'Include_test=0', 'Include_launcher=1'
-    Refresh-Path
-    return $true
+function Get-Verified($name, $spec) {
+  # download a pinned file and refuse it unless its SHA-256 matches kit.json
+  $out = Join-Path $env:TEMP (Split-Path $spec.url -Leaf)
+  if (-not (Download $spec.url $out)) { return $null }
+  if ((Get-FileHash $out -Algorithm SHA256).Hash -ne $spec.sha256) {
+    Remove-Item $out -Force -ErrorAction SilentlyContinue
+    Bad "$name download does not match its expected checksum. Refused, nothing installed. Tell the maintainer."
+    return $null
   }
-  return (Winget-Install 'Python.Python.3.12' 'Python 3.12')
+  return $out
 }
-function Install-Zip-Tool($name, $url, $binPattern) {
-  $zip = Join-Path $env:TEMP "$name.zip"
-  if (-not (Download $url $zip)) { return $false }
+function Install-Zip-Tool($name) {
+  # portable zip unpacked into the data folder: no administrator rights needed
+  $spec = $Kit.$name
+  $zip = Get-Verified $name $spec
+  if (-not $zip) { return $false }
   $dest = Join-Path $Tools $name
   Remove-Item $dest -Recurse -Force -ErrorAction SilentlyContinue
   New-Item -ItemType Directory -Force -Path $dest | Out-Null
   Expand-Archive -Path $zip -DestinationPath $dest -Force
-  $bin = Get-ChildItem $dest -Recurse -File -Filter $binPattern | Select-Object -First 1
-  if (-not $bin) { Bad "$name unpacked but $binPattern not found"; return $false }
-  Add-UserPath $bin.DirectoryName
   Remove-Item $zip -Force -ErrorAction SilentlyContinue
+  $bin = Get-ChildItem $dest -Recurse -File -Filter $spec.bin | Select-Object -First 1
+  if (-not $bin) { Bad "$name unpacked but $($spec.bin) not found"; return $false }
+  Add-UserPath $bin.DirectoryName
   return $true
 }
-function Install-Ffmpeg {
-  # Portable zip unpacked into the kit's own folder: no administrator rights needed.
-  if (Install-Zip-Tool 'ffmpeg' 'https://www.gyan.dev/ffmpeg/builds/ffmpeg-release-essentials.zip' 'ffmpeg.exe') { return $true }
-  return (Winget-Install 'Gyan.FFmpeg' 'ffmpeg')
-}
-function Install-Poppler {
-  try {
-    $rel = Invoke-RestMethod -Uri 'https://api.github.com/repos/oschwartz10612/poppler-windows/releases/latest' -UseBasicParsing -TimeoutSec 30
-    $asset = $rel.assets | Where-Object { $_.name -like '*.zip' } | Select-Object -First 1
-    if ($asset -and (Install-Zip-Tool 'poppler' $asset.browser_download_url 'pdftoppm.exe')) { return $true }
-  } catch { Warn "poppler direct download failed: $($_.Exception.Message)" }
-  return (Winget-Install 'oschwartz10612.Poppler' 'poppler')
-}
-function Pip($pipArgs) {
-  & $VenvPy -m pip @pipArgs
-  if ($LASTEXITCODE -ne 0) { Bad ('pip failed: ' + ($pipArgs -join ' ')); exit 1 }
+function Install-Uv {
+  $zip = Get-Verified 'uv' $Kit.uv
+  if (-not $zip) { return $false }
+  Expand-Archive -Path $zip -DestinationPath (Split-Path $Uv) -Force
+  Remove-Item $zip -Force -ErrorAction SilentlyContinue
+  return (Test-Path $Uv)
 }
 function Expand-TeamSource($src) {
   # returns the folder that holds roster.local.md (unpacks a zip to a temp folder first)
@@ -173,43 +165,32 @@ Head '2/7  What will be installed'
 if ($pf.toInstall.Count -eq 0) {
   Ok 'Everything is already installed.'
 } else {
-  $sizes = @{ 'python' = 'about 100 MB'; 'ffmpeg' = 'about 150 MB'; 'poppler' = 'about 40 MB'; 'python-packages' = 'about 2 to 3 GB, into its own folder (does not touch your other Python)' }
+  $sizes = @{ 'uv' = 'about 20 MB (the tool that installs the Python parts)'; 'ffmpeg' = 'about 150 MB'; 'poppler' = 'about 40 MB'; 'python-packages' = 'about 2 to 3 GB, with its own copy of Python (does not touch any other Python on this PC)' }
   foreach ($t in $pf.toInstall) { Say ("  - {0}: {1}" -f $t, $sizes[$t]) }
   Say '  Speech models download on first use (about 3 to 4 GB more).'
-  Say '  None of this needs administrator rights: everything goes into your own user folders.'
+  Say '  None of this needs administrator rights. It all goes into the data folder, and every download is checked'
+  Say '  against a fixed checksum before it is used.'
   if (-not (YesNo 'Install these now?')) { Say 'Nothing changed. Run the wizard again when ready.'; exit 0 }
 }
 
 # ---------------------------------------------------------------- 3. install
 Head '3/7  Installing'
-if ($pf.toInstall -contains 'python') { if (-not (Install-Python)) { Bad 'Could not install Python.'; exit 1 } }
-if ($pf.toInstall -contains 'ffmpeg') { if (-not (Install-Ffmpeg)) { Bad 'Could not install ffmpeg.'; exit 1 } }
-if ($pf.toInstall -contains 'poppler') { if (-not (Install-Poppler)) { Bad 'Could not install poppler.'; exit 1 } }
+if ($pf.toInstall -contains 'uv') { if (-not (Install-Uv)) { Bad 'Could not install uv.'; exit 1 } }
+if ($pf.toInstall -contains 'ffmpeg') { if (-not (Install-Zip-Tool 'ffmpeg')) { Bad 'Could not install ffmpeg.'; exit 1 } }
+if ($pf.toInstall -contains 'poppler') { if (-not (Install-Zip-Tool 'poppler')) { Bad 'Could not install poppler.'; exit 1 } }
 
 if ($pf.toInstall -contains 'python-packages') {
-  $pf2 = Get-Preflight
-  if (-not $pf2.python) { Bad 'Python is still not visible. Close this window, open a new PowerShell, run the wizard again.'; exit 1 }
-  if (-not (Test-Path $VenvPy)) {
-    Say "  creating private Python environment ($($pf2.python.version)) ..."
-    & $pf2.python.path -m venv $VenvDir
-    if ($LASTEXITCODE -ne 0) { Bad 'venv creation failed'; exit 1 }
-  }
-  $pin = $Kit.pins
-  Pip @('install', '--upgrade', 'pip')
-  if ($pf.device -eq 'cuda') {
-    Say '  installing PyTorch (NVIDIA build) ...'
-    Pip @('install', "torch==$($pin.torch)", "torchaudio==$($pin.torchaudio)", '--index-url', 'https://download.pytorch.org/whl/cu128')
-    Pip @('install', 'nvidia-cublas-cu12', 'nvidia-cudnn-cu12')
-  } else {
-    Say '  installing PyTorch (CPU build) ...'
-    Pip @('install', "torch==$($pin.torch)", "torchaudio==$($pin.torchaudio)", '--index-url', 'https://download.pytorch.org/whl/cpu')
-  }
-  Say '  installing speech and document packages ...'
-  Pip @('install', "whisperx==$($pin.whisperx)", "pyannote-audio==$($pin.'pyannote-audio')", "faster-whisper==$($pin.'faster-whisper')",
-        "python-docx==$($pin.'python-docx')", "openpyxl==$($pin.openpyxl)", 'markitdown[xlsx,docx,pdf]')
+  $extra = if ($pf.device -eq 'cuda') { 'cu128' } else { 'cpu' }
+  # an environment from an older kit (or one that is not the locked set) is replaced, not patched
+  Remove-Item $VenvDir -Recurse -Force -ErrorAction SilentlyContinue
+  Say "  installing Python $($Kit.python) and the locked packages ($(if ($extra -eq 'cu128') { 'NVIDIA build' } else { 'CPU build' })) ..."
+  Say '  every file is checked against the hash in the kit lock; anything that does not match is refused.'
+  & $Uv sync --frozen --no-install-project --extra $extra --project $EnvDir --python $Kit.python
+  if ($LASTEXITCODE -ne 0) { Bad 'Installing the Python packages failed (see above).'; exit 1 }
+  Write-Utf8 (Join-Path $VenvDir '.kit-lock') ((Get-FileHash $LockFile -Algorithm SHA256).Hash + " $extra")
 }
 $pf = Get-Preflight
-if ($pf.missingPackages.Count -gt 0) { Bad ('Still missing: ' + ($pf.missingPackages -join ', ')); exit 1 }
+if (-not $pf.environment) { Bad 'The Python environment is still not the locked one.'; exit 1 }
 if (-not $pf.ffmpeg -or -not $pf.ffprobe) { Bad 'ffmpeg is installed but not visible yet. Close this window, open a new PowerShell, run the wizard again.'; exit 1 }
 Ok 'All dependencies installed.'
 

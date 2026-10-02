@@ -8,22 +8,17 @@ $ErrorActionPreference = 'SilentlyContinue'
 $Data = if ($env:MINUTES_HOME) { $env:MINUTES_HOME } else { Join-Path $env:USERPROFILE '.claude\meeting-minutes' }
 $VenvPy = Join-Path $Data 'venv\Scripts\python.exe'
 $Kit = Get-Content (Join-Path $PSScriptRoot 'kit.json') -Raw | ConvertFrom-Json
+$Uv = Join-Path $Data 'bin\uv.exe'
+$LockFile = Join-Path (Split-Path $PSScriptRoot) 'env\uv.lock'
 
 function Find-Cmd($n) { $c = Get-Command $n -ErrorAction SilentlyContinue | Select-Object -First 1; if ($c) { $c.Source } else { $null } }
 
-# ---- installed pins vs kit.json (used by both modes)
-function Get-PackageState {
-  $pkgs = @{}
-  $bad = @()
-  if (Test-Path $VenvPy) {
-    $j = & $VenvPy -m pip list --format=json 2>$null | Out-String
-    if ($j) { foreach ($p in ($j | ConvertFrom-Json)) { $pkgs[$p.name.ToLower().Replace('_', '-')] = ($p.version -replace '\+.*$', '') } }
-  }
-  foreach ($p in $Kit.pins.PSObject.Properties) {
-    if ($pkgs[$p.Name] -ne $p.Value) { $bad += $p.Name }
-  }
-  foreach ($u in $Kit.unpinned) { if (-not $pkgs[$u]) { $bad += $u } }
-  return $bad
+# ---- is the Python environment exactly the kit's locked one? (used by both modes)
+# The wizard writes venv\.kit-lock (the SHA-256 of the env\uv.lock it installed) after a successful install.
+function Test-Env {
+  $stamp = Join-Path $Data 'venv\.kit-lock'
+  if (-not (Test-Path $VenvPy) -or -not (Test-Path $stamp)) { return $false }
+  return ((Get-Content $stamp -Raw).Split(' ')[0].Trim() -eq (Get-FileHash $LockFile -Algorithm SHA256).Hash)
 }
 
 # ---- quick gate: is the tool ready to produce minutes right now?
@@ -35,8 +30,7 @@ if ($Gate) {
     $d = Get-Content $done -Raw | ConvertFrom-Json
     if ($d.kitVersion -ne $Kit.kitVersion) { $why += "kit was updated ($($d.kitVersion) -> $($Kit.kitVersion)); re-run the setup wizard" }
   }
-  if (-not (Test-Path $VenvPy)) { $why += 'Python environment missing' }
-  else { $bad = Get-PackageState; if ($bad.Count) { $why += ('packages missing or wrong version: ' + ($bad -join ', ')) } }
+  if (-not (Test-Env)) { $why += 'Python environment missing or not the locked one' }
   foreach ($f in 'config.json', 'roster.local.md', 'signature.png') { if (-not (Test-Path (Join-Path $Data $f))) { $why += "$f missing" } }
   if (-not (Find-Cmd 'ffmpeg')) { $why += 'ffmpeg not on PATH' }
   if ($why.Count) { Write-Host ('NOT READY: ' + ($why -join '; ')); exit 1 }
@@ -67,16 +61,6 @@ if ($Gate) {
   exit 0
 }
 
-function Get-PyInfo($exe, $prefixArgs) {
-  if (-not $exe) { return $null }
-  $out = & $exe @prefixArgs -c "import sys,struct;print('%d.%d.%d|%d|%s'%(sys.version_info[0],sys.version_info[1],sys.version_info[2],struct.calcsize('P')*8,sys.executable))" 2>$null
-  if ($LASTEXITCODE -ne 0 -or -not $out) { return $null }   # Microsoft Store stub fails here
-  $p = ($out | Select-Object -Last 1) -split '\|'
-  $v = [version]$p[0]
-  [pscustomobject]@{ version = $p[0]; bits = [int]$p[1]; path = $p[2]
-    ok = ($v.Major -eq 3 -and $v.Minor -ge $Kit.python.minMinor -and $v.Minor -le $Kit.python.maxMinor -and [int]$p[1] -eq 64) }
-}
-
 $os = Get-CimInstance Win32_OperatingSystem
 $cpu = Get-CimInstance Win32_Processor | Select-Object -First 1
 $cs = Get-CimInstance Win32_ComputerSystem
@@ -87,18 +71,8 @@ $nvsmi = Find-Cmd 'nvidia-smi'
 $nvName = $null
 if ($nvsmi) { $nvName = (& $nvsmi --query-gpu=name,memory.total --format=csv,noheader 2>$null | Select-Object -First 1) }
 
-# python: prefer 'py' launcher versions, then PATH
-$py = $null
-foreach ($ver in '3.12', '3.13', '3.11', '3.10') {
-  $pyl = Find-Cmd 'py'
-  if ($pyl) { $i = Get-PyInfo $pyl @("-$ver"); if ($i -and $i.ok) { $py = $i; break } }
-}
-if (-not $py) { foreach ($n in 'python', 'python3') { $i = Get-PyInfo (Find-Cmd $n) @(); if ($i -and $i.ok) { $py = $i; break } } }
-$pyAny = $null
-if (-not $py) { $i = Get-PyInfo (Find-Cmd 'python') @(); if ($i) { $pyAny = $i } }
-
-$venvOk = Test-Path $VenvPy
-$missingPkgs = @(Get-PackageState)
+$uvOk = Test-Path $Uv
+$envOk = Test-Env
 
 $word = (Test-Path 'HKLM:\SOFTWARE\Classes\Word.Application\CLSID') -or ($env:MINUTES_TEST_SKIP_WORD -eq '1')   # the env flag is for testing installs on a PC/VM without Word
 $hf = [Environment]::GetEnvironmentVariable('HF_TOKEN', 'User')
@@ -106,7 +80,7 @@ if (-not $hf) { $hf = $env:HF_TOKEN }
 
 function Test-Url($u) { try { $r = Invoke-WebRequest -Uri $u -Method Head -UseBasicParsing -TimeoutSec 8; return ($r.StatusCode -lt 400) } catch { return $false } }
 $net = [ordered]@{}
-foreach ($h in 'pypi.org', 'huggingface.co', 'download.pytorch.org', 'files.pythonhosted.org') { $net[$h] = Test-Url ("https://$h") }
+foreach ($h in 'pypi.org', 'huggingface.co', 'download.pytorch.org', 'files.pythonhosted.org', 'github.com') { $net[$h] = Test-Url ("https://$h") }
 
 $files = [ordered]@{}
 foreach ($f in 'config.json', 'roster.local.md', 'signature.png', 'speaker_profiles.json', 'setup-complete.json') { $files[$f] = Test-Path (Join-Path $Data $f) }
@@ -126,7 +100,6 @@ if ($true) {
   }
 }
 
-$winget = Find-Cmd 'winget'
 $ffmpeg = Find-Cmd 'ffmpeg'
 $ffprobe = Find-Cmd 'ffprobe'
 $poppler = Find-Cmd 'pdftoppm'
@@ -141,13 +114,13 @@ if (-not $word) { $blockers += 'Microsoft Word (desktop) not found. Needed to ch
 if ($ramGB -lt 7.5) { $blockers += "Only $ramGB GB RAM. 8 GB is the minimum for transcription." }
 if ($freeGB -ne $null -and $freeGB -lt 15) { $blockers += "Only $freeGB GB free on $drive. About 15 GB is needed (packages plus speech models)." }
 if ($env:USERPROFILE -match '[^\x00-\x7F]') { $blockers += 'Your Windows user folder path has non-English characters. Python packages may fail. Ask the maintainer.' }
-if (-not $net['pypi.org'] -or -not $net['huggingface.co']) { $blockers += 'Cannot reach pypi.org or huggingface.co. Check the network or proxy.' }
+if (-not $net['pypi.org'] -or -not $net['huggingface.co'] -or -not $net['github.com']) { $blockers += 'Cannot reach pypi.org, huggingface.co or github.com. Check the network or proxy.' }
 
 $toInstall = @()
-if (-not $py) { $toInstall += 'python' }
+if (-not $uvOk) { $toInstall += 'uv' }
 if (-not $ffmpeg -or -not $ffprobe) { $toInstall += 'ffmpeg' }
 if (-not $poppler) { $toInstall += 'poppler' }
-if (-not $venvOk -or $missingPkgs.Count -gt 0) { $toInstall += 'python-packages' }
+if (-not $envOk) { $toInstall += 'python-packages' }
 
 $report = [ordered]@{
   kitVersion = $Kit.kitVersion
@@ -160,11 +133,8 @@ $report = [ordered]@{
   gpu = $gpus
   nvidiaGpu = $nvName
   device = $(if ($nvsmi -and $nvName -and $env:MINUTES_FORCE_CPU -ne '1') { 'cuda' } else { 'cpu' })   # MINUTES_FORCE_CPU=1 is for testing the no-GPU path
-  winget = [bool]$winget
-  python = $py
-  pythonUnsupported = $pyAny
-  venv = $venvOk
-  missingPackages = $missingPkgs
+  uv = $uvOk
+  environment = $envOk
   ffmpeg = $ffmpeg
   ffprobe = $ffprobe
   poppler = $poppler
@@ -186,13 +156,11 @@ Write-Host "Machine check (kit $($Kit.kitVersion))"
 Write-Host '-------------'
 Line $true 'system' "$($report.os), $($report.cpu), $ramGB GB RAM, $freeGB GB free on $drive"
 Line $true 'gpu' $(if ($nvName) { "NVIDIA: $nvName (fast path)" } else { "no NVIDIA GPU ($($gpus -join ', ')). CPU path: works, slower." })
-Line ([bool]$py) 'python' $(if ($py) { "$($py.version) at $($py.path)" } elseif ($pyAny) { "found $($pyAny.version), unsupported (need 3.10 to 3.13, 64-bit)" } else { 'not found' })
-Line $venvOk 'kit venv' $(if ($venvOk) { 'present' } else { 'not created yet' })
-Line ($missingPkgs.Count -eq 0 -and $venvOk) 'packages' $(if ($missingPkgs.Count) { 'missing/wrong: ' + ($missingPkgs -join ', ') } else { 'all pinned versions present' })
+Line $uvOk 'uv' $(if ($uvOk) { 'present (installs the locked Python environment)' } else { 'not yet' })
+Line $envOk 'python env' $(if ($envOk) { 'matches the kit lock' } else { 'not installed or out of date' })
 Line ([bool]($ffmpeg -and $ffprobe)) 'ffmpeg' $(if ($ffmpeg -and $ffprobe) { $ffmpeg } else { 'not found (ffmpeg + ffprobe)' })
 Line ([bool]$poppler) 'poppler' $(if ($poppler) { $poppler } else { 'not found (pdftoppm)' })
 Line $word 'Word' $(if ($word) { 'installed' } else { 'NOT FOUND (required)' })
-Line ([bool]$winget) 'winget' $(if ($winget) { 'available' } else { 'not found (the wizard will download installers directly)' })
 Line ([bool]$hf) 'HF_TOKEN' $(if ($hf) { 'set' } else { 'not set (wizard will guide you)' })
 foreach ($k in $files.Keys) { Line $files[$k] $k $(if ($files[$k]) { 'present' } else { 'not yet' }) }
 if ($teamFiles) { Write-Host ("       team files look already downloaded: $($teamFiles.path)") }

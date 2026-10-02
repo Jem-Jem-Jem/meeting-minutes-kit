@@ -1,14 +1,18 @@
 {
-  "kitVersion": "0.4.0",
-  "pins": {
-    "python-docx": "1.2.0",
-    "openpyxl": "3.1.5",
-    "faster-whisper": "1.2.1",
-    "whisperx": "3.8.6",
-    "pyannote-audio": "4.0.7",
-    "torch": "2.8.0",
-    "torchaudio": "2.8.0"
+  "kitVersion": "0.5.0",
+  "python": "3.12",
+  "uv": {
+    "url": "https://github.com/astral-sh/uv/releases/download/0.12.17/uv-x86_64-pc-windows-msvc.zip",
+    "sha256": "a252121d5b59398fcb137c6ea448176459a44010f33f67e0072305a637119ca7"
   },
-  "unpinned": ["markitdown"],
-  "python": { "minMinor": 10, "maxMinor": 13, "installVersion": "3.12.10" }
+  "ffmpeg": {
+    "url": "https://github.com/GyanD/codexffmpeg/releases/download/9.0.2/ffmpeg-9.0.2-essentials_build.zip",
+    "sha256": "60f467265b1e312373dbcd92200c2618a74850f98d3d078e94296bb3fa2047ba",
+    "bin": "ffmpeg.exe"
+  },
+  "poppler": {
+    "url": "https://github.com/oschwartz10612/poppler-windows/releases/download/v26.09.0-0/Release-26.09.0-0.zip",
+    "sha256": "7a6f256a0ddf7536182246a5733331bf4677cbcc34f4663774947ad34556c8d0",
+    "bin": "pdftoppm.exe"
+  }
 }

@@ -39,13 +39,13 @@ folder that ever held real data.
 ## Release
 
 1. Bump `kitVersion` in `plugin/skills/minutes-setup/scripts/kit.json` (the single source for the wizard, the
-   gate and the pins), and the same number in `package.json` and `plugin/.claude-plugin/plugin.json`.
+   gate and the pinned downloads), and the same number in `package.json` and `plugin/.claude-plugin/plugin.json`.
    Changing `kitVersion` makes every scribe's gate say "kit was updated, re-run the setup wizard", which is
-   what you want when pins change. For a docs-only change you may leave `kitVersion` alone.
+   what you want when the lock or a download changes. For a docs-only change you may leave `kitVersion` alone.
 2. `claude plugin validate .` and `claude plugin validate ./plugin` must both pass.
 3. Commit, push. Plugin users update with `claude plugin marketplace update meeting-minutes-kit` then `claude plugin update meeting-minutes@meeting-minutes-kit` and a restart. Claude Code only re-fetches a
    plugin when its `version` changes, so bump `plugin/.claude-plugin/plugin.json` (and `package.json`) for ANY content
-   change; `kitVersion` in `kit.json` changes only when the wizard or the pins change (it forces a wizard re-run).
+   change; `kitVersion` in `kit.json` changes only when the wizard, the lock or a download changes (it forces a wizard re-run).
 4. npm route (the any-agent install; `pnpm dlx github:Jem-Jem-Jem/meeting-minutes-kit install` already works from the
    repo without it, but a registry release is cleaner for non-git machines): `npm login` (once), then
    `pnpm publish --access public --no-git-checks`. Users update with `pnpm dlx meeting-minutes-kit@latest update`.
@@ -69,23 +69,37 @@ the next installer run, so test before pushing.
   Pro; enable it once from an admin PowerShell with
   `Enable-WindowsOptionalFeature -Online -FeatureName Containers-DisposableClientVM -All`, then reboot). Copy the
   kit folder and the team zip into the sandbox and run `setup.ps1` by hand. A sandbox has no Word, so set
-  `MINUTES_TEST_SKIP_WORD=1` (skips the Word check and render); it also has no winget, which exercises the
-  direct-download installers. Leave the HuggingFace token empty to test the no-token path.
+  `MINUTES_TEST_SKIP_WORD=1` (skips the Word check and render); it exercises the
+  checked downloads end to end. Leave the HuggingFace token empty to test the no-token path.
 - **Resume:** start `transcribe.py` on a long file, kill it after the "transcribe done" line, run the same
   command again: it should print `[resume] reusing finished speech-to-text`.
 
-## Pinned versions
+## Pinned versions (supply-chain safety)
 
-`kit.json` pins whisperx 3.8.6, pyannote-audio 4.0.7, torch 2.8.0, faster-whisper 1.2.1, python-docx 1.2.0,
-openpyxl 3.1.5. Bump them together, then rerun the end-to-end test.
+Everything a scribe's PC downloads is fixed and checked, because the tool handles sensitive meeting audio:
+
+- **Python packages:** `plugin/skills/minutes-setup/env/pyproject.toml` lists what the kit needs (CPU and NVIDIA
+  builds of PyTorch as two extras, each from PyTorch's own index); `env/uv.lock` fixes all ~130 packages with
+  their file hashes. The wizard runs `uv sync --frozen`, which refuses any file whose hash does not match.
+  `constraint-dependencies` holds the rest of the set at the versions tested together.
+- **Downloads:** uv itself, ffmpeg and poppler are fixed URLs with SHA-256 in `kit.json`; the wizard refuses a
+  mismatch. uv installs its own Python into the data folder.
+- **Models:** `MODEL_REVISIONS` in `meeting-minutes/scripts/speaker_profiles.py` pins each Hugging Face model to a
+  commit.
+
+To upgrade: change versions in `pyproject.toml` (or a URL + hash in `kit.json`, or a model commit), run `uv lock`
+in `env/` with the same uv version as `kit.json`, install both extras into a temp folder
+(`UV_PROJECT_ENVIRONMENT=<temp> uv sync --frozen --no-install-project --extra cpu|cu128`), transcribe a short clip with
+each, bump `kitVersion`, release. Prefer releases that are a few weeks old. Hashes for a new download: check them
+against the publisher's own (`gh api repos/<owner>/<repo>/releases/tags/<tag>` shows each asset's `digest`).
 
 ## Known limits
 
 - Word desktop is required (the pagination check uses it). There is no LibreOffice fallback.
 - Voice profiles enrolled on one microphone match less well on another.
-- Python, ffmpeg and poppler are installed by direct per-user download (no admin, no winget; winget is only the
-  fallback). The zip unpack + bin detection is tested; the Python per-user installer run and the user-PATH edit
-  are not, so the first clean PC is their real test. Node.js (MSI) and Git for Windows still need admin once.
+- uv, its Python, the packages, ffmpeg and poppler all go into the data folder (no admin). Tested on the
+  maintainer's PC into a temp data folder; the user-PATH edit for ffmpeg/poppler is not, so the first clean PC is
+  its real test. Node.js (MSI) and Git for Windows still need admin once.
 - Two table mics never line up perfectly for every speaker (different distances), so always listen to the
   merge samples.
 

@@ -38,8 +38,10 @@ agent session.
   hours on a low-power laptop CPU. The wizard measures your PC and tells you.
 - A free HuggingFace account: speaker identification uses a gated model whose licence you accept once.
 
-The setup wizard installs Python, ffmpeg and poppler if they are missing, by direct download into your own user
-folders. It needs **no administrator rights** and no winget. Node.js is needed only for install route 1 and git only
+The setup wizard installs everything else into its own data folder: Python (through uv), the Python packages,
+ffmpeg and poppler. It needs **no administrator rights** and does not touch any other Python on the PC. Every
+download is checked against a fixed hash and refused if it does not match, so a tampered or hijacked package
+cannot slip in. The speech models are pinned to fixed versions too. Node.js is needed only for install route 1 and git only
 for route 2 (and for Claude Code itself on Windows); installing either normally asks for administrator approval once.
 Install route 3 needs neither.
 

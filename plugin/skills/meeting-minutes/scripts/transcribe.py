@@ -39,7 +39,7 @@ import torch
 import whisperx
 import whisperx.diarize
 
-from speaker_profiles import ensure_hf_token, match_speakers, unresolved_candidates
+from speaker_profiles import ensure_hf_token, match_speakers, pinned_model, unresolved_candidates
 
 
 def keep_awake():
@@ -104,7 +104,8 @@ def transcribe(audio_path, model_name, device, ckpt, attendees=None, diarize=Tru
             result = json.load(f)
         print(f"[resume] reusing finished speech-to-text ({len(result['segments'])} segments)", flush=True)
     else:
-        model = whisperx.load_model(model_name, device=device, compute_type=compute_type, language="en")
+        model = whisperx.load_model(pinned_model(f"Systran/faster-whisper-{model_name}"), device=device,
+                                   compute_type=compute_type, language="en")
         result = model.transcribe(audio, batch_size=batch_size)
         print(f"[{time.time()-t0:.0f}s] transcribe done, {len(result['segments'])} segments", flush=True)
         align_model, align_meta = whisperx.load_align_model(language_code="en", device=device)
@@ -128,7 +129,8 @@ def transcribe(audio_path, model_name, device, ckpt, attendees=None, diarize=Tru
         diarize_segments = pd.read_csv(ckpt.path("diar.csv"))
         print(f"[resume] reusing finished diarization ({len(diarize_segments)} turns)", flush=True)
     else:
-        diarize_model = whisperx.diarize.DiarizationPipeline(token=os.environ["HF_TOKEN"], device=device)
+        diarize_model = whisperx.diarize.DiarizationPipeline(
+            model_name=pinned_model("pyannote/speaker-diarization-community-1"), device=device)
 
         def _progress(pct):
             print(f"[{time.time()-t0:.0f}s] diarizing: {pct:.0f}%", flush=True)

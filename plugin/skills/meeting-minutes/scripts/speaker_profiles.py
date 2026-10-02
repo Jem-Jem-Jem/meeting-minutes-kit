@@ -34,6 +34,23 @@ PROFILES_PATH = os.path.join(DATA_DIR, "speaker_profiles.json")
 MATCH_THRESHOLD = 0.7
 _EMBED_CHECKPOINT = "pyannote/speaker-diarization-community-1"
 
+# Hugging Face models pinned to exact commits: a changed or hijacked upstream repo cannot change what runs here.
+# To move to a newer model, test it, then update its commit here.
+MODEL_REVISIONS = {
+    "Systran/faster-whisper-large-v3": "edaa852ec7e145841d8ffdb056a99866b5f0a478",
+    "Systran/faster-whisper-medium.en": "a29b04bd15381511a9af671baec01072039215e3",
+    "Systran/faster-whisper-small.en": "d1d751a5f8271d482d14ca55d9e2deeebbae577f",
+    "pyannote/speaker-diarization-community-1": "3533c8cf8e369892e6b79ff1bf80f7b0286a54ee",
+}
+
+
+def pinned_model(repo):
+    """Local folder of `repo` at its pinned commit (downloaded once, then read from the HF cache)."""
+    from huggingface_hub import snapshot_download
+    if repo not in MODEL_REVISIONS:
+        sys.exit(f"{repo} is not one of the kit's pinned models: {', '.join(MODEL_REVISIONS)}")
+    return snapshot_download(repo, revision=MODEL_REVISIONS[repo], token=os.environ.get("HF_TOKEN"))
+
 
 def ensure_hf_token():
     """The wizard saves HF_TOKEN as a user env var. A session opened before that won't have
@@ -49,7 +66,7 @@ def ensure_hf_token():
 
 
 def _embedding_model(device="cpu"):
-    m = Model.from_pretrained(_EMBED_CHECKPOINT, subfolder="embedding", token=os.environ["HF_TOKEN"])
+    m = Model.from_pretrained(pinned_model(_EMBED_CHECKPOINT), subfolder="embedding")
     return Inference(m, window="whole", device=torch.device(device))
 
 
