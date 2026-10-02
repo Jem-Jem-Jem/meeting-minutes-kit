@@ -13,6 +13,8 @@ CLI (run with the kit's venv python):
         clean turns (no timestamps to hunt for)
     python speaker_profiles.py merge other_profiles.json
         add people from another profiles file (a newer team bundle); people already on file are kept as they are
+    python speaker_profiles.py remove "Name" [...]
+        delete a person's voice print from this PC (someone left, or withdrew consent)
     python speaker_profiles.py relabel transcript.txt SPEAKER_01=Name [SPEAKER_02=Name2 ...]
         rename speakers in a finished transcript (and its .segments.json) without re-running it
 """
@@ -216,6 +218,14 @@ def merge_profiles(other_path):
     print(f"merged voice profiles: {len(added)} added ({', '.join(added) or 'none'}), {len(other) - len(added)} already on file kept as is")
 
 
+def remove_profiles(names):
+    raw = _load_raw()
+    gone = [n for n in names if raw.pop(n, None) is not None]
+    if gone:
+        _save_raw(raw)
+    print(f"removed voice profiles: {', '.join(gone) or 'none on file'}")
+
+
 def relabel(transcript_path, mapping):
     import re
     line_re = re.compile(r"^(\[[0-9.]+-[0-9.]+\] )(.+?)(: .*)$")
@@ -248,6 +258,8 @@ if __name__ == "__main__":
                        device="cuda" if torch.cuda.is_available() else "cpu")
     elif len(sys.argv) >= 3 and sys.argv[1] == "merge":
         merge_profiles(sys.argv[2])
+    elif len(sys.argv) >= 3 and sys.argv[1] == "remove":
+        remove_profiles(sys.argv[2:])
     elif len(sys.argv) >= 4 and sys.argv[1] == "relabel":
         relabel(sys.argv[2], dict(a.split("=", 1) for a in sys.argv[3:]))
     elif len(sys.argv) >= 2 and sys.argv[1] == "list":

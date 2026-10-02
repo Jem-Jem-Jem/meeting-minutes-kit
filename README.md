@@ -109,12 +109,17 @@ The kit contains no team data. Each team provides:
 - `roster.local.md`: who is on the team, name spellings the transcriber gets wrong, recurring agenda areas,
   section headings, and any house rules. Free-form Markdown that the agent reads before every job.
 - `team.local.json`: `org`, `meeting_title`, `venue`, `approver_name` (used in the document header and sign-off block).
+  Optional `removed_voices`: a list of voice-print labels to delete from every scribe's PC on their next wizard run
+  (someone left the team, or withdrew consent).
 - optionally `speaker_profiles.json`: voice prints so speakers are named automatically. Voice prints are
   biometric data: share them only with people who agreed, and only inside your organisation.
 
 See `examples/team/` for fictional samples. The maintainer packs them with
 `tools/make-team-bundle.ps1` into `minutes-team-files.zip` and shares that privately (for example on Teams).
 They are copied to `%USERPROFILE%\.claude\meeting-minutes`, and updates never touch that folder.
+
+Optional: put your own Word file at `%USERPROFILE%\.claude\meeting-minutes\template.docx` and the minutes are built
+on it, keeping its page size, margins, fonts, letterhead, headers, footers and page numbers. Its body text is dropped.
 
 ## Each week
 

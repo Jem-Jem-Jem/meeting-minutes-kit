@@ -144,6 +144,11 @@ function Import-TeamFiles($folder) {
       & $VenvPy (Join-Path $MinutesScripts 'speaker_profiles.py') merge $vp 2>$null | Where-Object { $_ -like 'merged*' } | ForEach-Object { Ok $_ }
     }
   }
+  # people the team file says to forget (left the team, or withdrew consent): delete their voice prints here too
+  $gone = @((Get-Content (Join-Path $Data 'team.local.json') -Raw -Encoding UTF8 | ConvertFrom-Json).removed_voices | Where-Object { $_ })
+  if ($gone.Count -gt 0 -and (Test-Path $local)) {
+    & $VenvPy (Join-Path $MinutesScripts 'speaker_profiles.py') remove @gone 2>$null | Where-Object { $_ -like 'removed*' } | ForEach-Object { Ok $_ }
+  }
   return $true
 }
 

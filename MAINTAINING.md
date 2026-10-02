@@ -16,6 +16,12 @@ powershell -ExecutionPolicy Bypass -File tools\make-team-bundle.ps1 -Source ..\m
 `minutes-team-files.zip` in Downloads / Desktop / Documents / OneDrive by itself and offers it, so the scribe only
 downloads it and presses Enter. Voice prints are biometric data: include them only for people who agreed.
 
+**Someone leaves (or withdraws consent).** Delete their print from your own copies
+(`speaker_profiles.py remove "Label"`, run once per profiles file you hold, including the private folder), add the
+label to `removed_voices` in `team.local.json`, take them off the roster, rebuild the bundle and delete the old zip
+from Teams. Each scribe's next wizard run deletes the print on their PC too. Someone who leaves the weekly meeting but
+still joins other meetings can stay in the profiles and come off the roster only.
+
 Before EVERY publish, run the scrub check from the repo root and read what it prints:
 
 ```

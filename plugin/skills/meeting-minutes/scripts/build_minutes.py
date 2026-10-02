@@ -12,6 +12,7 @@ python-docx patch scripts or Word COM). Do NOT re-run this on a hand-edited file
 Org name, team name, venue default and sign-off names come from
 ~/.claude/meeting-minutes/config.json unless meeting.json overrides them.
 """
+import copy
 import json
 import os
 import re
@@ -21,7 +22,9 @@ from docx import Document
 from docx.enum.table import WD_TABLE_ALIGNMENT
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml import OxmlElement
+from docx.opc.constants import RELATIONSHIP_TYPE as RT
 from docx.oxml.ns import qn
+from docx.parts.numbering import NumberingPart
 from docx.shared import Inches, Pt, RGBColor
 
 HDR = '1F3864'      # top header row
@@ -117,16 +120,68 @@ def load_config():
     return cfg
 
 
+def base_document():
+    """A blank Document(), or the team's own template.docx (letterhead, fonts, page size, headers and
+    footers) with its body emptied. Styles the builder needs are copied in when the template lacks them."""
+    path = os.path.join(DATA_DIR, 'template.docx')
+    if not os.path.exists(path):
+        return Document(), False
+    doc = Document(path)
+    body = doc.element.body
+    for el in list(body):
+        if el.tag != qn('w:sectPr'):
+            body.remove(el)
+    default = Document()
+    have = {s.name for s in doc.styles}
+    for name in ('List Bullet', 'Table Grid'):
+        if name in have:
+            continue
+        el = copy.deepcopy(default.styles[name].element)
+        num = el.find('.//' + qn('w:numId'))
+        if num is not None:  # bring the bullet definition along, under ids the template does not use
+            src = default.part.numbering_part.element
+            dst = numbering_element(doc)
+            n = copy.deepcopy(next(x for x in src.findall(qn('w:num')) if x.get(qn('w:numId')) == num.get(qn('w:val'))))
+            aid = n.find(qn('w:abstractNumId')).get(qn('w:val'))
+            a = copy.deepcopy(next(x for x in src.findall(qn('w:abstractNum')) if x.get(qn('w:abstractNumId')) == aid))
+            new_a = str(1 + max([int(x.get(qn('w:abstractNumId'))) for x in dst.findall(qn('w:abstractNum'))] + [0]))
+            new_n = str(1 + max([int(x.get(qn('w:numId'))) for x in dst.findall(qn('w:num'))] + [0]))
+            a.set(qn('w:abstractNumId'), new_a)
+            n.set(qn('w:numId'), new_n)
+            n.find(qn('w:abstractNumId')).set(qn('w:val'), new_a)
+            num.set(qn('w:val'), new_n)
+            first = dst.find(qn('w:num'))  # schema order: every abstractNum before any num
+            first.addprevious(a) if first is not None else dst.append(a)
+            dst.append(n)
+        doc.styles.element.append(el)
+    return doc, True
+
+
+def numbering_element(doc):
+    """The template's numbering part, created from python-docx's own blank one if the template has none."""
+    try:
+        return doc.part.numbering_part.element
+    except (KeyError, NotImplementedError):
+        blank = Document().part.numbering_part
+        el = copy.deepcopy(blank.element)
+        for x in list(el):
+            el.remove(x)
+        part = NumberingPart(blank.partname, blank.content_type, el, doc.part.package)
+        doc.part.relate_to(part, RT.NUMBERING)
+        return part.element
+
+
 def build(m, cfg, out):
     org = m.get('org') or cfg.get('org') or 'Organisation Name'
     team = m.get('title') or cfg.get('meeting_title') or 'Team Meeting Minutes'
     preparer = m.get('preparer') or cfg.get('scribe_name') or ''
     approver = m.get('approver') or cfg.get('approver_name') or ''
 
-    doc = Document()
-    st = doc.styles['Normal']
-    st.font.name = 'Calibri'
-    st.font.size = Pt(10.5)
+    doc, templated = base_document()
+    if not templated:  # a team template keeps its own fonts
+        st = doc.styles['Normal']
+        st.font.name = 'Calibri'
+        st.font.size = Pt(10.5)
 
     h = doc.add_paragraph(); h.alignment = WD_ALIGN_PARAGRAPH.CENTER
     r = h.add_run(org); r.bold = True; r.font.size = Pt(14)
