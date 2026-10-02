@@ -46,9 +46,12 @@ folder that ever held real data.
 3. Commit, push. Plugin users update with `claude plugin marketplace update meeting-minutes-kit` then `claude plugin update meeting-minutes@meeting-minutes-kit` and a restart. Claude Code only re-fetches a
    plugin when its `version` changes, so bump `plugin/.claude-plugin/plugin.json` (and `package.json`) for ANY content
    change; `kitVersion` in `kit.json` changes only when the wizard, the lock or a download changes (it forces a wizard re-run).
-4. npm route (the any-agent install; `pnpm dlx github:Jem-Jem-Jem/meeting-minutes-kit install` already works from the
-   repo without it, but a registry release is cleaner for non-git machines): `npm login` (once), then
-   `pnpm publish --access public --no-git-checks`. Users update with `pnpm dlx meeting-minutes-kit@latest update`.
+4. npm: push a tag matching the version, for example `git tag v0.5.1 && git push origin v0.5.1`. GitHub Actions
+   (`.github/workflows/publish.yml`) checks the tag equals `package.json`'s version and publishes with npm trusted
+   publishing: no npm token anywhere, and the npm page shows provenance linking the release to its commit. The
+   trusted publisher is set on npmjs.com (package Settings: GitHub Actions, `Jem-Jem-Jem/meeting-minutes-kit`,
+   `publish.yml`). Do not publish from a local machine any more. Users update with
+   `pnpm dlx meeting-minutes-kit@latest update`; pnpm 11 installs a release once it is a day old.
 
 ## Install routes
 
