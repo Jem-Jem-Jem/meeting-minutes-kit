@@ -238,6 +238,9 @@ if (-not $haveTeam) {
   } else { Ok 'roster and team file already in place and up to date.' }
 } else { Ok 'roster and team file already in place.' }
 
+# the unpacked zip may hold voice prints (biometric data): keep only the copies in the data folder
+Remove-Item (Join-Path $env:TEMP 'minutes-team-files') -Recurse -Force -ErrorAction SilentlyContinue
+
 # config.json = this scribe's details + the team file (the team file wins for the keys it defines, so updates apply)
 $cfgPath = Join-Path $Data 'config.json'
 $team = Get-Content (Join-Path $Data 'team.local.json') -Raw -Encoding UTF8 | ConvertFrom-Json

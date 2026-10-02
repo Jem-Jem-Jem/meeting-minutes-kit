@@ -104,7 +104,8 @@ can run them yourself and use any chatbot only for the reading and writing step:
 
 ## Your team's files
 
-The kit contains no team data. Each team provides:
+The kit contains no team data and no one else's files will work for you: your team writes its own. Start from the
+fictional samples in `examples/team/` and replace everything in them. You need:
 
 - `roster.local.md`: who is on the team, name spellings the transcriber gets wrong, recurring agenda areas,
   section headings, and any house rules. Free-form Markdown that the agent reads before every job.
@@ -114,8 +115,9 @@ The kit contains no team data. Each team provides:
 - optionally `speaker_profiles.json`: voice prints so speakers are named automatically. Voice prints are
   biometric data: share them only with people who agreed, and only inside your organisation.
 
-See `examples/team/` for fictional samples. The maintainer packs them with
-`tools/make-team-bundle.ps1` into `minutes-team-files.zip` and shares that privately (for example on Teams).
+Whoever looks after your team's copy packs them with `tools/make-team-bundle.ps1` into `minutes-team-files.zip` and
+shares that privately with the team's scribes (for example on Teams). Working alone? Skip the zip: point the wizard at
+the folder holding your files.
 They are copied to `%USERPROFILE%\.claude\meeting-minutes`, and updates never touch that folder.
 
 Page layout: on the first run the agent asks whether to use the bundled layout, make one from your description, or
@@ -146,9 +148,11 @@ layout you chose (see above).
 
 There are two kinds of update. Do them in this order when both arrive together.
 
-**1. New team files** (the maintainer shares a new `minutes-team-files.zip`: roster changes, a new approver, voice
-prints added or removed). Download it into Downloads, Desktop or Documents. Delete the old zip. The tool only reads
-the zip during setup, so the next job will tell you a newer one is there and offer to re-run the wizard: say yes.
+**1. New team files** (only if your team shares a `minutes-team-files.zip` and whoever maintains it sends a new one:
+roster changes, a new approver, voice prints added or removed). Download it into Downloads, Desktop or Documents and
+delete the old zip. The tool only reads the zip during setup, so the next job will tell you a newer one is there and
+offer to re-run the wizard: say yes. Working alone, just edit your files in `%USERPROFILE%\.claude\meeting-minutes`
+directly; nothing to re-run.
 
 **2. New kit version.** Run the line for the route you installed with:
 
