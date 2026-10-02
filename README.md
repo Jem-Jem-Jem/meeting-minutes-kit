@@ -50,6 +50,8 @@ Install route 3 needs neither.
 pnpm --config.dlx-cache-max-age=0 dlx meeting-minutes-kit@latest install
 ```
 `--config.dlx-cache-max-age=0` matters: pnpm otherwise reuses a cached copy for a day and can install an old version.
+pnpm 11 also skips any release less than a day old (a safety default against hijacked packages), so a new version
+reaches this route a day after it is published. Leave that default alone.
 This copies the two skills into `~/.claude/skills` (read by Claude Code). Options: `--agents` (installs to
 `~/.agents/skills`), `--dir <path>` (any folder, for example a project's `.agents/skills`), `uninstall`. Freebuff scans
 `~/.claude/skills` when home skills are enabled; if your agent does not see the skills, use `--agents` or `--dir`.
