@@ -33,8 +33,9 @@ agent session.
 - An AI coding agent: Claude Code (on a plan that includes it, for example Pro; it needs Git for Windows on Windows)
   or Freebuff (free, no account) or a similar agent.
 - 8 GB RAM or more and about 15 GB free disk (Python packages plus speech models).
-- An NVIDIA GPU is optional. Without one, an hour of meeting takes about an hour on a fast desktop CPU and
-  several hours on a low-power laptop CPU (the wizard measures yours).
+- An NVIDIA GPU is optional but makes a big difference. Measured times for an hour of meeting: about 4 minutes with
+  an RTX 3060 Laptop GPU; about 70 minutes on the CPU of the same laptop (Intel Core i9-12900HK) with no GPU; several
+  hours on a low-power laptop CPU. The wizard measures your PC and tells you.
 - A free HuggingFace account: speaker identification uses a gated model whose licence you accept once.
 
 The setup wizard installs Python, ffmpeg and poppler if they are missing, by direct download into your own user
